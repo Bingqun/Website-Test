@@ -1,85 +1,433 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiet Light Villa — Architectural Portfolio</title>
-    <link rel="stylesheet" href="../global.css">
-</head>
-<body>
-    <header class="container">
-        <nav class="nav-container">
-            <a href="index.html" class="nav-logo">B.Q.</a>
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="portfolio.html" class="active">Portfolio</a></li>
-                <li><a href="about.html">About</a></li>
-                <li><a href="cv.html">CV</a></li>
-                <li><a href="contact.html">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowLeft, ArrowRight, Menu, X, Instagram, Linkedin, Mail } from 'lucide-react';
 
-    <main class="container">
-        <!-- side elements -->
-        <div class="decorative-side left">
-            <div class="line-y"></div>
-            <span class="vertical-text rotate-180">Index 08/26</span>
-        </div>
-        <div class="decorative-side right">
-            <span class="vertical-text">Berlin, DE</span>
-            <div class="line-y"></div>
-        </div>
+// --- Types & Data ---
 
-        <article class="fade-in">
-            <div class="project-hero">
-                <img src="https://picsum.photos/seed/p3_hero/1920/1200" alt="Quiet Light Villa" referrerPolicy="no-referrer">
+type View = 'home' | 'works' | 'studio' | 'contact' | 'project-detail';
+
+interface Project {
+  id: string;
+  title: string;
+  category: string;
+  year: string;
+  description: string;
+  image: string;
+}
+
+const PROJECTS: Project[] = [
+  {
+    id: 'p1',
+    title: 'The Monolith Pavilion',
+    category: 'Cultural',
+    year: '2024',
+    description: 'A structural exploration of concrete and light, designed as a contemplative space within an urban park.',
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    id: 'p2',
+    title: 'Void Residence',
+    category: 'Residential',
+    year: '2023',
+    description: 'A brutalist-inspired family home focusing on interior voids and carved-out spaces for natural ventilation.',
+    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    id: 'p3',
+    title: 'Nordic Light Library',
+    category: 'Public',
+    year: '2024',
+    description: 'An expansive timber structure that maximizes seasonal daylighting through a complex sawtooth roof system.',
+    image: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?q=80&w=2070&auto=format&fit=crop'
+  },
+  {
+    id: 'p4',
+    title: 'Oasis Corporate HQ',
+    category: 'Commercial',
+    year: '2022',
+    description: 'A sustainable office complex integrating vertical gardens and modular glass facades for energetic efficiency.',
+    image: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?q=80&w=2070&auto=format&fit=crop'
+  }
+];
+
+// --- Components ---
+
+const Navbar = ({ onViewChange, currentView }: { onViewChange: (v: View) => void, currentView: View }) => (
+  <nav className="fixed top-0 left-0 w-full z-50 p-6 flex justify-between items-center text-paper-light">
+    <div className="flex flex-col">
+      <div 
+        className="cursor-pointer font-sans text-2xl font-light tracking-[0.4em] leading-none uppercase"
+        onClick={() => onViewChange('home')}
+      >
+        AETERNA
+      </div>
+      <p className="text-[10px] tracking-[0.3em] text-white/40 mt-2 uppercase hidden md:block">Architectural Studio / London — Zurich</p>
+    </div>
+    <div className="flex gap-12 text-[10px] tracking-[0.2em] uppercase font-medium">
+      <button 
+        onClick={() => onViewChange('works')}
+        className={`hover:text-white transition-colors ${currentView === 'works' ? 'text-white' : 'text-white/40'}`}
+      >
+        Works
+      </button>
+      <button 
+        onClick={() => onViewChange('studio')}
+        className={`hover:text-white transition-colors ${currentView === 'studio' ? 'text-white' : 'text-white/40'}`}
+      >
+        Studio
+      </button>
+      <button 
+        onClick={() => onViewChange('contact')}
+        className={`hover:text-white transition-colors ${currentView === 'contact' ? 'text-white' : 'text-white/40'}`}
+      >
+        Inquiry
+      </button>
+    </div>
+  </nav>
+);
+
+const BackButton = ({ onClick }: { onClick: () => void }) => (
+  <button 
+    onClick={onClick}
+    className="fixed top-24 left-6 z-50 flex items-center gap-4 text-[10px] uppercase tracking-[0.2em] font-semibold text-white/60 hover:text-white transition-all"
+  >
+    <div className="w-8 h-[1px] bg-current"></div> Back to Grid
+  </button>
+);
+
+export default function App() {
+  const [view, setView] = useState<View>('home');
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view, selectedProject]);
+
+  const handleProjectClick = (project: Project) => {
+    setSelectedProject(project);
+    setView('project-detail');
+  };
+
+  const getPageBg = () => {
+    switch (view) {
+      case 'works': return 'bg-teal-dark'; 
+      case 'studio': return 'bg-accent-sand text-ink-accent'; 
+      case 'contact': return 'bg-obsidian'; 
+      default: return 'bg-obsidian dot-pattern';
+    }
+  };
+
+  const getTextColor = () => {
+    if (view === 'studio') return 'text-ink-accent';
+    return 'text-paper-light';
+  };
+
+  return (
+    <div className={`min-h-screen transition-colors duration-700 ${getPageBg()} ${getTextColor()} font-sans`}>
+      <Navbar onViewChange={setView} currentView={view} />
+
+      <AnimatePresence mode="wait">
+        {view !== 'home' && <BackButton onClick={() => setView(view === 'project-detail' ? 'works' : 'home')} />}
+
+        {view === 'home' && (
+          <motion.main 
+            key="home"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="p-6 pt-32 max-w-[1600px] mx-auto"
+          >
+            <div className="architectural-grid">
+              {/* Tile 1: Hero Featured */}
+              <div 
+                className="col-span-12 md:col-span-8 lg:col-span-9 row-span-4 bg-teal-dark border border-white/5 overflow-hidden group cursor-pointer relative min-h-[400px] flex flex-col justify-between p-10"
+                onClick={() => setView('works')}
+              >
+                <div className="flex justify-between items-start z-10">
+                  <span className="text-[10px] font-mono text-white/30 tracking-[0.2em]">01 / 04</span>
+                  <span className="text-[10px] tracking-[0.4em] text-white/30 uppercase italic font-serif">Selected Works</span>
+                </div>
+                <div className="z-10">
+                  <h2 className="text-5xl md:text-7xl font-serif italic mb-4 tracking-tight">Obsidian House</h2>
+                  <p className="text-sm text-white/50 max-w-sm font-light leading-relaxed">An exploration of volcanic materiality and subterranean light in the Swiss Alps.</p>
+                </div>
+                <div className="absolute top-0 right-0 w-full h-full opacity-40 group-hover:opacity-60 transition-opacity duration-1000">
+                    <img 
+                      src={PROJECTS[0].image} 
+                      className="w-full h-full object-cover mix-blend-overlay grayscale"
+                      referrerPolicy="no-referrer"
+                    />
+                </div>
+                <div className="absolute bottom-0 right-0 p-12 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
+                  <div className="w-80 h-80 border-[1px] border-white rounded-full"></div>
+                </div>
+              </div>
+
+              {/* Tile 2: Studio */}
+              <div 
+                className="col-span-12 md:col-span-4 lg:col-span-3 row-span-2 bg-accent-sand text-ink-accent p-10 flex flex-col justify-between group cursor-pointer hover:brightness-95 transition-all duration-500 border border-white/5"
+                onClick={() => setView('studio')}
+              >
+                <div className="flex justify-between text-[10px] tracking-[0.3em] font-semibold uppercase opacity-50">
+                  <span>Practice</span>
+                  <span>EST. 2014</span>
+                </div>
+                <h3 className="text-3xl font-serif italic font-medium tracking-tight leading-tight">"Architecture is the learned game of forms assembled in the light."</h3>
+                <div className="flex items-center gap-4 text-[10px] font-bold tracking-[0.3em] uppercase">
+                  <div className="w-8 h-[1px] bg-current"></div> Read Manifesto
+                </div>
+              </div>
+
+              {/* Tile 3: Contact */}
+              <div 
+                className="col-span-6 md:col-span-2 lg:col-span-1 row-span-2 bg-gray-dark border border-white/5 p-6 flex flex-col justify-between group cursor-pointer hover:bg-black transition-all duration-500"
+                onClick={() => setView('contact')}
+              >
+                <div className="text-[10px] tracking-[0.3em] uppercase font-bold opacity-30">Inquiry</div>
+                <div className="flex justify-center items-center h-full">
+                  <div className="w-10 h-10 border border-white/10 rounded-full flex items-center justify-center group-hover:border-white/30 transition-all">
+                    <Mail size={16} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tile 4: Sub-feature */}
+              <div 
+                className="col-span-6 md:col-span-2 lg:col-span-2 row-span-2 bg-slate-darker border border-white/5 p-10 flex flex-col justify-end group cursor-pointer hover:bg-opacity-80 transition-all duration-500"
+                onClick={() => handleProjectClick(PROJECTS[1])}
+              >
+                <div className="text-[10px] tracking-[0.4em] uppercase font-bold opacity-30 mb-auto">Featured</div>
+                <h4 className="text-2xl font-serif italic mb-2 leading-none">{PROJECTS[1].title}</h4>
+                <div className="text-[10px] tracking-[0.2em] font-medium opacity-40 uppercase">Archived {PROJECTS[1].year}</div>
+              </div>
+
+              {/* Individual Scroll of Projects */}
+              {PROJECTS.map((project, idx) => (
+                <div 
+                  key={project.id}
+                  className={`col-span-12 md:col-span-6 lg:col-span-4 row-span-3 bg-white/5 overflow-hidden group cursor-pointer border border-white/10 flex flex-col hover:bg-white/10 transition-all duration-700 ${idx === 0 ? 'hidden' : ''}`}
+                  onClick={() => handleProjectClick(project)}
+                >
+                  <div className="flex-1 overflow-hidden">
+                    <img 
+                      src={project.image} 
+                      className="w-full h-full object-cover grayscale opacity-30 group-hover:opacity-70 transition-all duration-1000"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="p-8 flex justify-between items-end">
+                    <div>
+                      <div className="text-[10px] tracking-[0.4em] uppercase font-bold opacity-30 mb-2 italic font-serif ">{project.category}</div>
+                      <h5 className="text-xl font-serif italic tracking-tight">{project.title}</h5>
+                    </div>
+                    <div className="text-[10px] tracking-[0.2em] font-medium opacity-30 uppercase">{project.year}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.main>
+        )}
+
+        {view === 'works' && (
+          <motion.div 
+            key="works"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="p-6 pt-48 max-w-[1400px] mx-auto min-h-screen"
+          >
+            <div className="mb-24 flex flex-col md:flex-row justify-between items-end gap-10">
+              <div className="max-w-2xl">
+                <span className="text-[10px] tracking-[0.5em] text-white/30 uppercase block mb-6">Archive Vol. II</span>
+                <h1 className="text-7xl md:text-9xl font-serif italic tracking-tighter leading-none mb-10">Historical<br/>Works</h1>
+              </div>
+              <p className="max-w-xs text-xs tracking-[0.1em] text-white/40 uppercase leading-relaxed font-medium text-right underline underline-offset-8">
+                A non-linear collection of spatial explorations and finished architectural works.
+              </p>
             </div>
 
-            <div class="project-specs">
-                <div class="spec-item">
-                    <div class="label">Project</div>
-                    <div>Quiet Light Villa</div>
-                </div>
-                <div class="spec-item">
-                    <div class="label">Year</div>
-                    <div>2022</div>
-                </div>
-                <div class="spec-item">
-                    <div class="label">Category</div>
-                    <div>Interior</div>
-                </div>
-                <div class="spec-item">
-                    <div class="label">Location</div>
-                    <div>Hangzhou, China</div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {PROJECTS.map((project) => (
+                <motion.div 
+                  layoutId={`project-${project.id}`}
+                  key={project.id}
+                  className="bg-white/5 backdrop-blur-sm group cursor-pointer border border-white/5 overflow-hidden transition-all duration-700"
+                  onClick={() => handleProjectClick(project)}
+                >
+                  <div className="aspect-[4/5] overflow-hidden relative">
+                    <img 
+                      src={project.image} 
+                      className="w-full h-full object-cover grayscale brightness-50 group-hover:brightness-100 group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div class="absolute top-4 right-4 text-[9px] font-mono text-white/40">{project.year}</div>
+                  </div>
+                  <div className="p-8">
+                    <div className="flex justify-between items-start mb-6">
+                      <h3 className="text-2xl font-serif italic tracking-tight">{project.title}</h3>
+                    </div>
+                    <div className="h-[1px] w-full bg-white/10 mb-6" />
+                    <div className="flex justify-between items-center text-[10px] tracking-[0.4em] uppercase font-bold text-white/30">
+                      <span>{project.category}</span>
+                      <div className="w-8 h-[1px] bg-current opacity-30"></div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
+          </motion.div>
+        )}
 
-            <div class="project-description">
-                <h1 class="serif" style="font-size: 3rem; margin-bottom: 2rem;">Harmonizing tradition and modernity.</h1>
-                <p>This interior renovation of a traditional villa in Hangzhou focuses on the interaction between wooden materials and diffused light. By stripping away years of unnecessary additions, the original spatial proportions were restored and enhanced with minimal architectural elements.</p>
-                <p>The design employs a monochromatic palette of warm grays and natural wood, creating a seamless flow between the interior and the surrounding landscape. Soft light filters through custom-made linen screens, echoing the traditional paper windows of local architecture.</p>
-            </div>
+        {view === 'project-detail' && selectedProject && (
+          <motion.div 
+            key="detail"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen pt-48"
+          >
+            <div className="max-w-[1400px] mx-auto px-6">
+              <div className="flex flex-col lg:flex-row gap-24">
+                <div className="lg:w-1/2">
+                  <span className="text-[10px] tracking-[0.5em] text-white/30 uppercase block mb-8 italic font-serif">Project Entry 01 / {PROJECTS.length}</span>
+                  <motion.h1 
+                    layoutId={`title-${selectedProject.id}`}
+                    className="text-6xl md:text-8xl font-serif italic tracking-tighter mb-12 leading-none"
+                  >
+                    {selectedProject.title}
+                  </motion.h1>
+                  
+                  <div className="flex gap-16 mb-16 text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 border-t border-white/5 pt-10">
+                    <div>
+                      <div className="mb-4">Location</div>
+                      <div className="text-white">Oslo / Norway</div>
+                    </div>
+                    <div>
+                      <div className="mb-4">Typology</div>
+                      <div className="text-white">{selectedProject.category}</div>
+                    </div>
+                    <div>
+                      <div className="mb-4">Status</div>
+                      <div className="text-white">Completed</div>
+                    </div>
+                  </div>
 
-            <div class="project-gallery">
-                <img src="https://picsum.photos/seed/p3_g1/1200/800" alt="Living Room" referrerPolicy="no-referrer">
-                <img src="https://picsum.photos/seed/p3_g2/1200/800" alt="Bedroom detail" referrerPolicy="no-referrer">
+                  <p className="text-2xl md:text-3xl font-serif italic leading-relaxed mb-16 text-white/70">
+                    {selectedProject.description}
+                  </p>
+
+                  <div className="space-y-6 opacity-40 text-xs tracking-wide leading-relaxed max-w-lg font-medium">
+                    <p>
+                      The spatial logic of this project derived from a rigorous study of volcanic materiality and subterranean light. By utilizing carved-out voids, we allowed for an architectural dialogue between the interior and the surrounding landscape.
+                    </p>
+                    <p>
+                      Structural honesty remains a core tenet of the design, where exposed concrete and shadow play create moments of transcendence.
+                    </p>
+                  </div>
+                </div>
+                <div className="lg:w-1/2">
+                  <motion.div 
+                    layoutId={`project-${selectedProject.id}`}
+                    className="aspect-[3/4] bg-teal-dark border border-white/5 relative overflow-hidden"
+                  >
+                    <img 
+                      src={selectedProject.image} 
+                      className="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition-all duration-1000"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 dot-pattern opacity-20"></div>
+                  </motion.div>
+                </div>
+              </div>
             </div>
-        </article>
-        
-        <div style="margin-bottom: 8rem; display: flex; justify-content: space-between;">
-            <a href="project-2.html" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em;">← Previous project</a>
-            <a href="portfolio.html" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em;">Back to works</a>
+          </motion.div>
+        )}
+
+        {view === 'studio' && (
+          <motion.div 
+            key="studio"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="p-6 pt-48 max-w-[1200px] mx-auto min-h-screen"
+          >
+            <span className="text-[10px] tracking-[0.5em] uppercase font-bold opacity-30 block mb-10">Our DNA / Context</span>
+            <h1 className="text-8xl md:text-[12rem] font-serif italic tracking-tighter mb-20 leading-none">STUDIO</h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-24 text-2xl font-serif italic leading-loose text-ink-accent">
+              <div className="space-y-12">
+                <p>
+                  Based in London and Zurich, we are an architectural practice dedicated to the intersection of site-specificity and structural innovation.
+                </p>
+                <p>
+                  Our work is defined by a commitment to volcanic materiality and the profound human experience of space. We believe that architecture should be quiet yet impactful, providing a legacy of forms assembled in the light.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-16">
+                <div className="border-t border-ink-accent/10 pt-10">
+                  <h3 className="text-xs uppercase tracking-[0.4em] font-bold mb-6 opacity-40">Ethics / Vision</h3>
+                  <p className="text-lg font-sans not-italic font-medium leading-relaxed uppercase tracking-tight">We prioritize material longevity and lifecycle impact, finding beauty in the aging of honest surfaces.</p>
+                </div>
+                <div className="border-t border-ink-accent/10 pt-10">
+                  <h3 className="text-xs uppercase tracking-[0.4em] font-bold mb-6 opacity-40">Method / Process</h3>
+                  <p className="text-lg font-sans not-italic font-medium leading-relaxed uppercase tracking-tight">Iterative modeling, material testing, and a close collaboration with local artisans ensure structural integrity.</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {view === 'contact' && (
+          <motion.div 
+            key="contact"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -40 }}
+            className="fixed inset-0 flex items-center justify-center p-6 bg-obsidian dot-pattern"
+          >
+            <div className="max-w-[1400px] w-full grid grid-cols-1 md:grid-cols-2 gap-32 items-end">
+              <div>
+                <span className="text-[10px] tracking-[0.6em] text-white/30 uppercase block mb-10 italic font-serif">Contact / Inquiry</span>
+                <h1 className="text-8xl md:text-[14rem] font-serif italic tracking-tighter text-white leading-none">INquiry.</h1>
+                <div className="mt-20 space-y-8">
+                  <div className="flex items-center gap-6 group cursor-pointer">
+                    <div className="w-12 h-12 border border-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500">
+                      <Instagram size={18} />
+                    </div>
+                    <span className="uppercase tracking-[0.4em] text-[10px] font-bold text-white/30 group-hover:text-white transition-colors">@aeterna.studio</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-white space-y-20">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-16">
+                  <div className="space-y-6">
+                    <h3 className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30 border-b border-white/5 pb-4">London</h3>
+                    <p className="text-xl font-serif italic text-white/70">Worship St, Shoreditch<br/>EC2A 2DX London</p>
+                  </div>
+                  <div className="space-y-6">
+                    <h3 className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30 border-b border-white/5 pb-4">Zurich</h3>
+                    <p className="text-xl font-serif italic text-white/70">Hardstrasse 201<br/>8005 Zürich</p>
+                  </div>
+                </div>
+                <div className="pt-16 border-t border-white/5 flex flex-col gap-4">
+                  <span className="text-[10px] tracking-[0.4em] uppercase font-bold opacity-30">Direct Correspondence</span>
+                  <a href="mailto:hello@aeterna.studio" className="text-4xl md:text-6xl font-serif italic hover:text-white/60 transition-all">hello@aeterna.studio</a>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <footer className="p-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 mt-32 text-[9px] tracking-[0.3em] uppercase font-medium text-white/30">
+        <div>© 2024 AETERNA Studio. All Rights Reserved.</div>
+        <div className="flex gap-12 font-bold italic font-serif">
+          <span className="cursor-pointer hover:text-white transition-colors">Instagram</span>
+          <span className="cursor-pointer hover:text-white transition-colors">LinkedIn</span>
+          <span className="cursor-pointer hover:text-white transition-colors">Journal</span>
         </div>
-    </main>
-
-    <footer class="container">
-        <div class="footer-copy">Architectural Designer &copy; 2026</div>
-        <div class="lang-switcher">
-            <a href="project-3.html" class="active">EN</a>
-            <a href="../de/project-3.html">DE</a>
-            <a href="../zh/project-3.html">ZH</a>
-        </div>
-    </footer>
-</body>
-</html>
+      </footer>
+    </div>
+  );
+}
