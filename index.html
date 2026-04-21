@@ -1,123 +1,678 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Architectural OS Portfolio</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Architectural OS Portfolio</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap');
 
-<style>
-/* ✅ 这里只改了 pagination-dots */
+        :root {
+            --bg: #FCFCFC;
+            --ink: #1A1A1A;
+            --border: rgba(26, 26, 26, 0.15); /* Precise thin lines */
+            --grid-line: #1A1A1A;
+            --accent-gray: #E0E0E0;
+            --accent-beige: #F8F5F0;
+            --accent-sage: #F4F6F3;
+            --transition: 0.7s cubic-bezier(0.2, 0, 0, 1);
+            --transition-fast: 0.4s cubic-bezier(0.2, 0, 0, 1);
+        }
 
-.pagination-dots {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem; /* 👈 让中间有间距 */
-    z-index: 10;
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
 
-/* 👇 下面全部是你原来的代码（未改动） */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
 
-:root {
-    --bg: #FCFCFC;
-    --ink: #1A1A1A;
-    --border: rgba(26, 26, 26, 0.15);
-    --grid-line: #1A1A1A;
-    --accent-gray: #E0E0E0;
-    --accent-beige: #F8F5F0;
-    --accent-sage: #F4F6F3;
-    --transition: 0.7s cubic-bezier(0.2, 0, 0, 1);
-    --transition-fast: 0.4s cubic-bezier(0.2, 0, 0, 1);
-}
+        .mono { font-family: 'JetBrains Mono', monospace; }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
-}
+        /* --- LAYER 0: THE HORIZONTAL DESKTOPS --- */
+        #os-desktop {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            cursor: grab;
+            scrollbar-width: none;
+        }
 
-body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
-}
+        #os-desktop::-webkit-scrollbar { display: none; }
 
-.mono { font-family: 'JetBrains Mono', monospace; }
+        .desktop-panel {
+            min-width: 100vw;
+            height: 100vh;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 10vw;
+            transition: var(--transition);
+        }
 
-/* --- LAYER 0 --- */
-#os-desktop {
-    display: flex;
-    height: 100vh;
-    width: 100vw;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    cursor: grab;
-    scrollbar-width: none;
-}
-#os-desktop::-webkit-scrollbar { display: none; }
+        .desktop-panel h2 {
+            font-size: 8vw;
+            font-weight: 300;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            position: relative;
+        }
 
-.desktop-panel {
-    min-width: 100vw;
-    height: 100vh;
-    scroll-snap-align: start;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    padding: 10vw;
-}
+        .desktop-panel .panel-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            opacity: 0.6;
+            margin-bottom: 2rem;
+        }
 
-.desktop-panel h2 {
-    font-size: 8vw;
-    font-weight: 300;
-    letter-spacing: -0.05em;
-    text-transform: uppercase;
-}
+        .desktop-panel .explore-btn {
+            padding: 1rem 3rem;
+            border: 1px solid var(--ink);
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.25em;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            background: transparent;
+        }
 
-.desktop-panel .explore-btn {
-    padding: 1rem 3rem;
-    border: 1px solid var(--ink);
-    text-transform: uppercase;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.25em;
-    cursor: pointer;
-}
+        .desktop-panel .explore-btn:hover {
+            background: var(--ink);
+            color: var(--bg);
+        }
 
-/* 其余代码完全保持原样 */
-</style>
+        /* Decoration */
+        .desktop-panel::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 85%;
+            height: 85%;
+            transform: translate(-50%, -50%);
+            border: 0.5px solid rgba(26, 26, 26, 0.05);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* --- LAYER 1: DETAIL VIEWS (GEOMETRIC BALANCE) --- */
+        .detail-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 100;
+            transform: translateY(100%);
+            transition: var(--transition);
+            overflow-y: auto;
+            visibility: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-view.active {
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .detail-header {
+            padding: 2rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 110;
+            border-bottom: 1px solid var(--ink);
+        }
+
+        .detail-header .header-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .micro-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            opacity: 0.5;
+        }
+
+        .detail-header h3 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+        }
+
+        .back-btn {
+            background: var(--ink);
+            color: var(--bg);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .back-btn:hover {
+            opacity: 0.8;
+            transform: translateX(-5px);
+        }
+
+        /* --- BENTO GRID STYLE --- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: 250px;
+            gap: 1px;
+            background: var(--grid-line);
+            padding: 1px;
+            flex: 1;
+        }
+
+        .grid-item {
+            background: var(--bg);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid-item:hover { background: #F5F5F5; }
+
+        .grid-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(1);
+            opacity: 0.9;
+            transition: var(--transition);
+        }
+
+        .grid-item:hover img {
+            filter: grayscale(0);
+            opacity: 1;
+            transform: scale(1.02);
+        }
+
+        .grid-item .item-info {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            background: var(--ink);
+            color: var(--bg);
+            padding: 0.4rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            opacity: 0;
+            transition: var(--transition-fast);
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+
+        .grid-item:hover .item-info {
+            opacity: 1;
+            transform: scaleX(1);
+        }
+
+        /* Grid Item Sizes */
+        .grid-item.large { grid-column: span 8; grid-row: span 3; }
+        .grid-item.vertical { grid-column: span 4; grid-row: span 3; }
+        .grid-item.horizontal { grid-column: span 8; grid-row: span 2; }
+        .grid-item.small { grid-column: span 4; grid-row: span 2; }
+
+        /* --- BIO DETAIL --- */
+        .bio-content {
+            padding: 4rem 3rem;
+            max-width: 1000px;
+            align-self: flex-start;
+            flex: 1;
+            width: 100%;
+        }
+
+        .bio-section { margin-bottom: 6rem; }
+
+        .bio-section h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+            margin-bottom: 2rem;
+            opacity: 0.4;
+        }
+
+        .bio-item {
+            border-top: 1px solid rgba(26, 26, 26, 0.1);
+            padding: 1.5rem 0;
+            display: grid;
+            grid-template-columns: 200px 1fr;
+        }
+
+        .bio-item .year { font-family: 'JetBrains Mono', monospace; font-size: 12px; opacity: 0.5; }
+        .bio-text p { font-size: 1.5rem; font-weight: 300; line-height: 1.3; letter-spacing: -0.02em; }
+
+        /* --- LAYER 2: PROJECT DETAIL --- */
+        #project-detail {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            color: var(--ink);
+            z-index: 200;
+            display: flex;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        #project-detail.active { opacity: 1; visibility: visible; }
+
+        .project-image-side { flex: 1; height: 100%; overflow: hidden; }
+        .project-image-side img { width: 100%; height: 100%; object-fit: cover; }
+
+        .project-info-side {
+            width: 450px;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            border-left: 1px solid var(--ink);
+        }
+
+        .close-project {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: var(--ink);
+            color: var(--bg);
+            border: none;
+            padding: 1rem 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            z-index: 210;
+        }
+
+        /* --- NAVIGATION UI (FOOTER OS STYLE) --- */
+        .pagination-dots {
+            position: fixed;
+            bottom: 2rem;
+            left: 3rem;
+            right: 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .perspective-nav {
+            display: flex;
+            gap: 1px;
+            background: var(--ink);
+            border: 1px solid var(--ink);
+        }
+
+        .nav-tab {
+            padding: 0.5rem 1.5rem;
+            background: var(--bg);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.5;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .nav-tab.active { opacity: 1; background: var(--ink); color: var(--bg); }
+
+        .orbit-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            opacity: 0.4;
+        }
+
+        /* --- PALETTES --- */
+        .palette-gray { --bg: #FCFCFC; }
+        .palette-beige { --bg: #F8F5F0; }
+        .palette-sage { --bg: #F4F6F3; }
+
+        /* --- DECORATIVE OVERLAY --- */
+        .overlay-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .overlay-line-v { position: absolute; top: 0; width: 1px; height: 100%; background: var(--ink); opacity: 0.02; }
+        .overlay-line-h { position: absolute; left: 0; height: 1px; width: 100%; background: var(--ink); opacity: 0.02; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .grid-item.large, .grid-item.horizontal, .grid-item.vertical, .grid-item.small {
+                grid-column: span 12;
+                grid-row: span 2;
+            }
+            .project-info-side { width: 100%; position: absolute; bottom: 0; background: rgba(252,252,252,0.9); backdrop-filter: blur(10px); }
+            .detail-header h3 { font-size: 1.5rem; }
+            .bio-item { grid-template-columns: 1fr; gap: 1rem; }
+        }
+    </style>
 </head>
-
 <body>
 
-<div id="os-desktop">
-    <section class="desktop-panel">
-        <h2>THE BIO</h2>
-    </section>
-</div>
-
-<div class="pagination-dots">
-    <div class="perspective-nav">
-        <div class="nav-tab active">01 BIO</div>
-        <div class="nav-tab">02 ARCH DESIGN</div>
-        <div class="nav-tab">03 DIGITAL ARCH</div>
-        <div class="nav-tab">04 OTHER</div>
-        <div class="nav-tab">05 CONTACT</div>
+    <!-- DECORATIVE OVERLAY -->
+    <div class="overlay-lines">
+        <div class="overlay-line-v" style="left: 25%"></div>
+        <div class="overlay-line-v" style="left: 50%"></div>
+        <div class="overlay-line-v" style="left: 75%"></div>
+        <div class="overlay-line-h" style="top: 50%"></div>
     </div>
 
-    <div class="orbit-label">Orbit_System_V1.0</div>
-</div>
+    <!-- LAYER 0: INTERFACE -->
+    <div id="os-desktop">
+        <section class="desktop-panel" id="panel-1">
+            <span class="panel-tag">01 / Foundation</span>
+            <h2>bingqun liu</h2>
+            <button class="explore-btn" onclick="openDetail('bio')">read more</button>
+        </section>
 
+        <section class="desktop-panel" id="panel-2">
+            <span class="panel-tag">02 / Portfolio</span>
+            <h2>architectural design</h2>
+            <button class="explore-btn" onclick="openDetail('arch')">view works</button>
+        </section>
+
+        <section class="desktop-panel" id="panel-3">
+            <span class="panel-tag">03 / Exploration</span>
+            <h2>digital architecture</h2>
+            <button class="explore-btn" onclick="openDetail('digital')">explore</button>
+        </section>
+
+        <section class="desktop-panel" id="panel-4">
+            <span class="panel-tag">04 / Intersection</span>
+            <h2>other works</h2>
+            <button class="explore-btn" onclick="openDetail('other')">curation</button>
+        </section>
+
+        <section class="desktop-panel" id="panel-5">
+            <span class="panel-tag">05 / Relation</span>
+            <h2>contact</h2>
+            <button class="explore-btn" onclick="openDetail('contact')">reach out</button>
+        </section>
+    </div>
+
+    <!-- UI ELEMENTS -->
+    <div class="pagination-dots">
+        <div class="perspective-nav">
+            <div class="nav-tab active" onclick="scrollToPanel(0)">01 BIO</div>
+            <div class="nav-tab" onclick="scrollToPanel(1)">02 ARCH DESIGN</div>
+            <div class="nav-tab" onclick="scrollToPanel(2)">03 DIGITAL ARCH</div>
+            <div class="nav-tab" onclick="scrollToPanel(3)">04 OTHER</div>
+            <div class="nav-tab" onclick="scrollToPanel(4)">05 CONTACT</div>
+        </div>
+        <div class="orbit-label">Orbit_System_V1.0</div>
+    </div>
+
+    <!-- LAYER 1: BIO DETAIL -->
+    <div id="view-bio" class="detail-view">
+        <header class="detail-header">
+            <div class="header-group">
+                <span class="micro-label">Identity_Module</span>
+                <h3>Curriculum Vitae</h3>
+            </div>
+            <button class="back-btn" onclick="closeDetail('bio')">Return_Layer_0</button>
+        </header>
+        <div class="bio-content">
+            <div class="bio-section">
+                <h4>Biography</h4>
+                <div class="bio-text">
+                    <p>Focused on the intersection of structural logic and minimalist aesthetics, I craft environments that breathe. With over a decade of experience in residential and public infrastructure, my work prioritizes the dialogue between light, void, and material honesty.</p>
+                </div>
+            </div>
+            <div class="bio-section">
+                <h4>Experience</h4>
+                <div class="bio-item">
+                    <span class="year">2022 — Present</span>
+                    <div class="bio-text">
+                        <p>Principal Architect at Studio Void, Berlin</p>
+                    </div>
+                </div>
+                <div class="bio-item">
+                    <span class="year">2018 — 2022</span>
+                    <div class="bio-text">
+                        <p>Senior Designer at Mono Architects, Tokyo</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bio-section">
+                <h4>Recognition</h4>
+                <div class="bio-item">
+                    <span class="year">2023</span>
+                    <div class="bio-text">
+                        <p>Minimalist Design Award — Silver Medal</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYER 1: ARCH DESIGN GRID -->
+    <div id="view-arch" class="detail-view palette-gray">
+        <header class="detail-header">
+            <div class="header-group">
+                <span class="micro-label">Catalog_V1</span>
+                <h3>Architectural Design</h3>
+            </div>
+            <button class="back-btn" onclick="closeDetail('arch')">Return_Layer_0</button>
+        </header>
+        <div class="grid-container">
+            <div class="grid-item large" onclick="openProject('https://picsum.photos/seed/arch1/1920/1080', 'The Concrete Monolith', 'A study of brutalist volume and shadow.')">
+                <img src="https://picsum.photos/seed/arch1/1200/800" alt="Work 1" referrerPolicy="no-referrer">
+                <div class="item-info">01 / The Monolith</div>
+            </div>
+            <div class="grid-item vertical" onclick="openProject('https://picsum.photos/seed/arch2/1080/1920', 'Light Shaft Residence', 'Chasing the zenithal light in a dense urban core.')">
+                <img src="https://picsum.photos/seed/arch2/800/1200" alt="Work 2" referrerPolicy="no-referrer">
+                <div class="item-info">02 / Shaft</div>
+            </div>
+            <div class="grid-item small" onclick="openProject('https://picsum.photos/seed/arch3/1200/800', 'Glass Pavillion', 'Transparency as a structural element.')">
+                <img src="https://picsum.photos/seed/arch3/800/600" alt="Work 3" referrerPolicy="no-referrer">
+                <div class="item-info">03 / Pavillion</div>
+            </div>
+            <div class="grid-item horizontal" onclick="openProject('https://picsum.photos/seed/arch4/1920/1080', 'The Horizon Line', 'Low-profile residential design in the desert.')">
+                <img src="https://picsum.photos/seed/arch4/1200/600" alt="Work 4" referrerPolicy="no-referrer">
+                <div class="item-info">04 / Horizon</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYER 1: DIGITAL ARCH GRID -->
+    <div id="view-digital" class="detail-view palette-beige">
+        <header class="detail-header">
+            <div class="header-group">
+                <span class="micro-label">Experiment_Layer</span>
+                <h3>Digital Architecture</h3>
+            </div>
+            <button class="back-btn" onclick="closeDetail('digital')">Return_Layer_0</button>
+        </header>
+        <div class="grid-container">
+            <div class="grid-item vertical" onclick="openProject('https://picsum.photos/seed/dig1/1080/1920', 'Procedural Ruins', 'Computational decay in virtual spaces.')">
+                <img src="https://picsum.photos/seed/dig1/800/1200" alt="Digital 1" referrerPolicy="no-referrer">
+                <div class="item-info">01 / Entropy</div>
+            </div>
+            <div class="grid-item large" onclick="openProject('https://picsum.photos/seed/dig2/1920/1080', 'Meta-Void', 'Concept for a decentralized gallery.')">
+                <img src="https://picsum.photos/seed/dig2/1200/800" alt="Digital 2" referrerPolicy="no-referrer">
+                <div class="item-info">02 / Meta-Void</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYER 1: OTHER WORKS GRID -->
+    <div id="view-other" class="detail-view palette-sage">
+        <header class="detail-header">
+            <div class="header-group">
+                <span class="micro-label">Lateral_Studies</span>
+                <h3>Other Works</h3>
+            </div>
+            <button class="back-btn" onclick="closeDetail('other')">Return_Layer_0</button>
+        </header>
+        <div class="grid-container">
+            <div class="grid-item horizontal" onclick="openProject('https://picsum.photos/seed/other1/1920/1080', 'Furniture Series 01', 'Aluminum studies in cantilever.')">
+                <img src="https://picsum.photos/seed/other1/1200/600" alt="Other 1" referrerPolicy="no-referrer">
+                <div class="item-info">01 / Furniture</div>
+            </div>
+            <div class="grid-item small" onclick="openProject('https://picsum.photos/seed/other2/800/800', 'Material Research', 'Oxidized metal texture library.')">
+                <img src="https://picsum.photos/seed/other2/800/800" alt="Other 2" referrerPolicy="no-referrer">
+                <div class="item-info">02 / Materials</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYER 1: CONTACT -->
+    <div id="view-contact" class="detail-view">
+        <header class="detail-header">
+            <div class="header-group">
+                <span class="micro-label">Comms_Interface</span>
+                <h3>Get in Touch</h3>
+            </div>
+            <button class="back-btn" onclick="closeDetail('contact')">Return_Layer_0</button>
+        </header>
+        <div class="bio-content">
+            <form class="contact-form" onsubmit="event.preventDefault(); alert('Message sent.');">
+                <input type="text" placeholder="Your Name" required>
+                <input type="email" placeholder="Email Address" required>
+                <textarea rows="4" placeholder="Brief Inquiry"></textarea>
+                <button class="explore-btn" type="submit">Send Message</button>
+            </form>
+            <div style="margin-top: 4rem; opacity: 0.4; font-size: 0.8rem; letter-spacing: 1px;">
+                STUDIO@ARCH-OS.COM<br>
+                BERLIN — TOKYO — PARIS
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYER 2: PROJECT DETAIL -->
+    <div id="project-detail">
+        <button class="close-project" onclick="closeProject()">Close_View</button>
+        <div class="project-image-side">
+            <img id="project-img" src="" alt="Project Image" referrerPolicy="no-referrer">
+        </div>
+        <div class="project-info-side">
+            <span class="micro-label" style="margin-bottom: 1rem;">Project_Insight</span>
+            <h2 id="project-title" style="font-weight: 300; margin-bottom: 2rem; font-size: 3.5rem; line-height: 0.9; letter-spacing: -0.05em; text-transform: uppercase;"></h2>
+            <p id="project-desc" style="font-weight: 300; opacity: 0.8; line-height: 1.6;"></p>
+            <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--ink);" class="mono micro-label">
+                Data_Verified // Status: Finalized
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // NAVIGATION LOGIC
+        const desktop = document.getElementById('os-desktop');
+        const tabs = document.querySelectorAll('.nav-tab');
+
+        function scrollToPanel(index) {
+            desktop.scrollTo({
+                left: index * window.innerWidth,
+                behavior: 'smooth'
+            });
+        }
+
+        desktop.addEventListener('scroll', () => {
+            const index = Math.round(desktop.scrollLeft / window.innerWidth);
+            tabs.forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+            });
+        });
+
+        function openDetail(id) {
+            document.getElementById(`view-${id}`).classList.add('active');
+        }
+
+        function closeDetail(id) {
+            document.getElementById(`view-${id}`).classList.remove('active');
+        }
+
+        function openProject(imgUrl, title, desc) {
+            const projectView = document.getElementById('project-detail');
+            document.getElementById('project-img').src = imgUrl;
+            document.getElementById('project-title').textContent = title;
+            document.getElementById('project-desc').textContent = desc;
+            projectView.classList.add('active');
+        }
+
+        function closeProject() {
+            document.getElementById('project-detail').classList.remove('active');
+        }
+
+        // Horizontal Drag to Scroll Support
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        desktop.addEventListener('mousedown', (e) => {
+            isDown = true;
+            desktop.style.cursor = 'grabbing';
+            startX = e.pageX - desktop.offsetLeft;
+            scrollLeft = desktop.scrollLeft;
+        });
+
+        desktop.addEventListener('mouseleave', () => {
+            isDown = false;
+            desktop.style.cursor = 'grab';
+        });
+
+        desktop.addEventListener('mouseup', () => {
+            isDown = false;
+            desktop.style.cursor = 'grab';
+        });
+
+        desktop.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - desktop.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            desktop.scrollLeft = scrollLeft - walk;
+        });
+    </script>
 </body>
 </html>
+
