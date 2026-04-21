@@ -1,446 +1,405 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArchiTech: AI in Architecture</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: '#0A84FF',
+                        surface: '#09090B',
+                        'surface-muted': '#18181B',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.8s ease-out forwards',
+                        'slide-up': 'slideUp 0.8s ease-out forwards',
+                        'parallax': 'parallax 10s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        parallax: {
+                            '0%': { transform: 'scale(1.1) translateY(0)' },
+                            '100%': { transform: 'scale(1.1) translateY(5%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-surface text-zinc-100 font-sans selection:bg-brand selection:text-white overflow-x-hidden;
+            }
+        }
 
-import React, { useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'motion/react';
-import { 
-  Building2, 
-  Cpu, 
-  Box, 
-  Layers, 
-  Zap, 
-  Globe, 
-  ChevronRight, 
-  Menu, 
-  X, 
-  ArrowUpRight,
-  Database,
-  Bot
-} from 'lucide-react';
+        @layer components {
+            .nav-link {
+                @apply text-sm font-medium text-zinc-400 hover:text-white transition-colors;
+            }
+            .section-reveal {
+                @apply opacity-0 translate-y-8 transition-all duration-700 ease-out;
+            }
+            .section-reveal.active {
+                @apply opacity-100 translate-y-0;
+            }
+        }
 
-// --- Constants & Data ---
+        .text-balance { text-wrap: balance; }
+        .mask-fade-bottom { mask-image: linear-gradient(to bottom, black 50%, transparent 100%); }
+    </style>
+</head>
+<body>
 
-const NAV_LINKS = [
-  { name: 'Introduction', href: '#intro' },
-  { name: 'Capabilities', href: '#capabilities' },
-  { name: 'Tools', href: '#tools' },
-  { name: 'Case Studies', href: '#cases' },
-  { name: 'Future', href: '#future' },
-];
-
-const CAPABILITIES = [
-  {
-    title: "Generative Design",
-    description: "Algorithmic explorations that optimize for spatial efficiency, structural integrity, and material usage.",
-    icon: <Cpu className="w-6 h-6" />,
-    color: "from-blue-500/20 to-cyan-500/20"
-  },
-  {
-    title: "Environmental Simulation",
-    description: "Real-time analysis of solar orientation, wind patterns, and thermal performance during the first draft.",
-    icon: <Globe className="w-6 h-6" />,
-    color: "from-emerald-500/20 to-teal-500/20"
-  },
-  {
-    title: "Robotic Fabrication",
-    description: "Bridging the gap between code and concrete through automated 3D printing and precise assembly.",
-    icon: <Bot className="w-6 h-6" />,
-    color: "from-purple-500/20 to-pink-500/20"
-  },
-  {
-    title: "Parametric Workflows",
-    description: "Complex geometries controlled by variables, allowing for infinite iterations with microscopic precision.",
-    icon: <Layers className="w-6 h-6" />,
-    color: "from-orange-500/20 to-red-500/20"
-  }
-];
-
-const TOOLS = [
-  { name: "Stable Diffusion", category: "Visualization", desc: "Conceptual mood boarding and prompt-to-render workflows." },
-  { name: "Autodesk Forma", category: "Site Analysis", desc: "AI-driven site planning and microclimate simulations." },
-  { name: "Grasshopper + AI", category: "Parametric", desc: "Integrating machine learning models into visual scripting." },
-  { name: "Veras", category: "Rendering", desc: "Real-time AI visualization directly within BIM software." },
-  { name: "DALL-E 3", category: "ideation", desc: "Fast architectural style exploration and conceptualization." },
-  { name: "TestFit", category: "Feasibility", desc: "Automated site testing for multi-family and commercial developments." }
-];
-
-// --- Components ---
-
-const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-surface/80 backdrop-blur-md border-b border-zinc-800/50 py-4' : 'bg-transparent py-6'}`}>
-      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        <div className="flex items-center gap-2 group cursor-pointer">
-          <div className="w-8 h-8 bg-brand rounded-sm flex items-center justify-center overflow-hidden">
-            <Layers className="w-5 h-5 text-white" />
-          </div>
-          <span className="font-display font-bold text-xl tracking-tighter uppercase">ArchiTech</span>
-        </div>
-
-        {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map((link) => (
-            <a 
-              key={link.name} 
-              href={link.href}
-              className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
-            >
-              {link.name}
-            </a>
-          ))}
-          <button className="bg-white text-black px-5 py-2 rounded-full text-sm font-bold hover:bg-brand hover:text-white transition-all">
-            Get Report
-          </button>
-        </div>
-
-        {/* Mobile Toggle */}
-        <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <X /> : <Menu />}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 w-full bg-surface border-b border-zinc-800 p-6 flex flex-col gap-4 md:hidden"
-          >
-            {NAV_LINKS.map((link) => (
-              <a 
-                key={link.name} 
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-lg font-medium text-zinc-400 hover:text-white"
-              >
-                {link.name}
-              </a>
-            ))}
-            <button className="bg-brand text-white py-3 rounded-xl font-bold">
-              Get Report
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
-  );
-};
-
-const Hero = () => {
-  const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 500], [0, 200]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
-
-  return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Background with Parallax */}
-      <motion.div 
-        style={{ y: y1 }}
-        className="absolute inset-0 z-0"
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-surface/20 via-surface/60 to-surface z-10" />
-        <img 
-          src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070&auto=format&fit=crop" 
-          alt="Modern Architecture"
-          className="w-full h-full object-cover opacity-60"
-          referrerPolicy="no-referrer"
-        />
-      </motion.div>
-
-      <div className="relative z-20 max-w-7xl mx-auto px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          style={{ opacity }}
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs font-bold uppercase tracking-widest mb-6">
-            <Zap className="w-3 h-3" />
-            Special Exhibit: 2026
-          </div>
-          <h1 className="font-display text-5xl md:text-8xl font-black tracking-tight leading-[0.9] mb-8 lg:max-w-4xl mx-auto uppercase">
-            The Algorithmic <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand to-cyan-400">Architect</span>
-          </h1>
-          <p className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-            AI is not just a tool; it's a co-creator. Explore how machine intelligence is rewriting the rules of space, form, and function.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-black px-8 py-4 rounded-full font-bold flex items-center justify-center gap-2 hover:scale-105 transition-transform group">
-              Start Exploring <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button className="border border-zinc-700 px-8 py-4 rounded-full font-bold hover:bg-zinc-800 transition-colors">
-              Read the Manifesto
-            </button>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Floating Elements (Decorative) */}
-      <motion.div 
-        animate={{ 
-          y: [0, -20, 0],
-          rotate: [0, 5, 0]
-        }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-20 right-20 hidden lg:block"
-      >
-        <div className="w-32 h-32 border border-zinc-800 rounded-lg flex items-center justify-center bg-surface/40 backdrop-blur-sm">
-          <Database className="w-8 h-8 text-zinc-500" />
-        </div>
-      </motion.div>
-    </section>
-  );
-};
-
-const FeatureSection = () => {
-  return (
-    <section id="capabilities" className="py-32 relative">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="mb-20">
-          <h2 className="font-display text-4xl md:text-6xl font-bold tracking-tight mb-6">Redefining the <br /> Possible</h2>
-          <div className="h-1 w-20 bg-brand mb-8" />
-          <p className="text-zinc-400 max-w-xl text-lg font-light leading-relaxed">
-            From the first pencil stroke to final assembly, AI agents are assisting architects in ways previously resigned to science fiction.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {CAPABILITIES.map((cap, i) => (
-            <motion.div
-              key={cap.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.5 }}
-              className={`p-8 rounded-2xl border border-zinc-800 bg-gradient-to-br ${cap.color} hover:border-zinc-700 transition-all group cursor-default`}
-            >
-              <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mb-6 ring-1 ring-zinc-800 group-hover:scale-110 transition-transform">
-                {cap.icon}
-              </div>
-              <h3 className="font-display text-xl font-bold mb-4">{cap.title}</h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">{cap.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const ToolsBento = () => {
-  return (
-    <section id="tools" className="py-32 bg-zinc-950/50 border-y border-zinc-900">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-20">
-          <span className="text-brand text-xs font-bold uppercase tracking-[0.3em] mb-4 block">The Ecosystem</span>
-          <h2 className="font-display text-4xl md:text-5xl font-bold mb-6">Intelligent Platforms</h2>
-          <p className="text-zinc-500 max-w-2xl mx-auto">The tools of the trade are evolving. These platforms represent the bleeding edge of architectural AI integration.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {TOOLS.map((tool, i) => (
-            <motion.div
-              key={tool.name}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className="p-6 rounded-2xl bg-surface border border-zinc-900 hover:border-brand/40 hover:bg-zinc-900/50 transition-all flex flex-col justify-between group"
-            >
-              <div>
-                <span className="px-2 py-1 rounded-md bg-zinc-800 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4 inline-block group-hover:bg-brand/20 group-hover:text-brand transition-colors">
-                  {tool.category}
-                </span>
-                <h4 className="text-xl font-bold mb-2">{tool.name}</h4>
-                <p className="text-zinc-500 text-sm leading-relaxed">{tool.desc}</p>
-              </div>
-              <div className="mt-6 flex justify-end">
-                <ArrowUpRight className="w-5 h-5 text-zinc-700 group-hover:text-brand transition-colors" />
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const ImpactStudy = () => {
-  return (
-    <section id="cases" className="py-32 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col lg:flex-row gap-16 items-center">
-          <div className="lg:w-1/2">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative rounded-3xl overflow-hidden aspect-video group"
-            >
-              <img 
-                src="https://images.unsplash.com/photo-1518005020251-58296d8f817d?q=80&w=2070&auto=format&fit=crop" 
-                alt="Case Study" 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-              <div className="absolute bottom-8 left-8">
-                <span className="text-brand text-xs font-bold uppercase mb-2 block">Case Study #01</span>
-                <h3 className="text-2xl font-bold text-white">The Neural Pavilion</h3>
-                <p className="text-zinc-300 text-sm max-w-xs mt-1">Optimizing carbon footprint and modularity through evolutionary algorithms.</p>
-              </div>
-            </motion.div>
-          </div>
-          <div className="lg:w-1/2 space-y-8">
-            <h2 className="font-display text-4xl md:text-5xl font-bold">Tangible Transformation</h2>
-            <p className="text-zinc-400 text-lg leading-relaxed font-light italic">
-              "We used to spend months on site analysis and feasibility studies. Now, we run 10,000 simulations in an afternoon, finding solutions we couldn't have imagined."
-            </p>
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <div className="text-4xl font-display font-black text-brand mb-1">45%</div>
-                <div className="text-xs uppercase tracking-widest text-zinc-500 font-bold">Reduction in Material waste</div>
-              </div>
-              <div>
-                <div className="text-4xl font-display font-black text-brand mb-1">10x</div>
-                <div className="text-xs uppercase tracking-widest text-zinc-500 font-bold">Faster Iteration Cycles</div>
-              </div>
+    <!-- Navbar -->
+    <nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-6">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <div class="flex items-center gap-2 group cursor-pointer">
+                <div class="w-8 h-8 bg-brand rounded-sm flex items-center justify-center overflow-hidden">
+                    <i data-lucide="layers" class="w-5 h-5 text-white"></i>
+                </div>
+                <span class="font-display font-bold text-xl tracking-tighter uppercase">ArchiTech</span>
             </div>
-            <button className="flex items-center gap-2 font-bold hover:text-brand transition-colors pt-4 group">
-              View All Exhibits <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
 
-const FutureSection = () => {
-  return (
-    <section id="future" className="py-32 relative bg-surface">
-      <div className="max-w-5xl mx-auto px-6 text-center">
-        <motion.div
-           initial={{ opacity: 0, scale: 0.9 }}
-           whileInView={{ opacity: 1, scale: 1 }}
-           viewport={{ once: true }}
-           className="p-16 rounded-[3rem] bg-gradient-to-b from-zinc-900 to-transparent border border-zinc-800/50 relative overflow-hidden"
-        >
-          {/* Ambient Glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/2 bg-brand/10 blur-[120px] rounded-full pointer-events-none" />
-          
-          <h2 className="font-display text-4xl md:text-7xl font-bold mb-8">The Responsive <br /> City</h2>
-          <p className="text-zinc-400 text-lg md:text-xl leading-relaxed mb-12 max-w-2xl mx-auto font-light">
-            We are moving toward buildings that think. AI-driven urban operating systems that adjust to social, environmental, and structural changes in real-time. The future of architecture is living.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-             {['Smart Fabrics', 'Adaptive Facades', 'Carbon Capturing AI', 'Digital Twins'].map(tag => (
-               <span key={tag} className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-xs font-bold text-zinc-400 rounded-full">
-                 {tag}
-               </span>
-             ))}
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-};
-
-const CTA = () => {
-  return (
-    <section className="py-20 relative">
-      <div className="max-w-7xl mx-auto px-6 border-t border-zinc-900 pt-32 pb-10">
-        <div className="bg-brand rounded-[2.5rem] p-12 md:p-24 flex flex-col md:flex-row items-center justify-between gap-12 text-white overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 skew-x-[-20deg] translate-x-1/2" />
-          
-          <div className="relative z-10">
-            <h2 className="font-display text-4xl md:text-6xl font-bold mb-4 tracking-tighter">Ready for the <br /> Paradigm Shift?</h2>
-            <p className="text-white/80 max-w-md text-lg">Join 25,000+ architects and designers receiving our weekly intelligence update.</p>
-          </div>
-          
-          <div className="w-full md:w-auto relative z-10">
-             <div className="flex flex-col sm:flex-row gap-4">
-                <input 
-                  type="email" 
-                  placeholder="name@studio.com" 
-                  className="bg-white/10 border border-white/20 px-8 py-4 rounded-full text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-80"
-                />
-                <button className="bg-white text-brand px-10 py-4 rounded-full font-bold hover:bg-zinc-100 transition-colors whitespace-nowrap">
-                  Subscribe
+            <!-- Desktop Links -->
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#intro" class="nav-link">Introduction</a>
+                <a href="#capabilities" class="nav-link">Capabilities</a>
+                <a href="#tools" class="nav-link">Tools</a>
+                <a href="#cases" class="nav-link">Case Studies</a>
+                <a href="#future" class="nav-link">Future</a>
+                <button class="bg-white text-black px-5 py-2 rounded-full text-sm font-bold hover:bg-brand hover:text-white transition-all">
+                    Get Report
                 </button>
-             </div>
-          </div>
+            </div>
+
+            <!-- Mobile Toggle -->
+            <button id="menu-toggle" class="md:hidden text-white">
+                <i data-lucide="menu" id="menu-icon"></i>
+            </button>
         </div>
-      </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden absolute top-full left-0 w-full bg-surface border-b border-zinc-800 p-6 flex flex-col gap-4 md:hidden animate-fade-in">
+            <a href="#intro" class="text-lg font-medium text-zinc-400 hover:text-white menu-item">Introduction</a>
+            <a href="#capabilities" class="text-lg font-medium text-zinc-400 hover:text-white menu-item">Capabilities</a>
+            <a href="#tools" class="text-lg font-medium text-zinc-400 hover:text-white menu-item">Tools</a>
+            <a href="#cases" class="text-lg font-medium text-zinc-400 hover:text-white menu-item">Case Studies</a>
+            <a href="#future" class="text-lg font-medium text-zinc-400 hover:text-white menu-item">Future</a>
+            <button class="bg-brand text-white py-3 rounded-xl font-bold">
+                Get Report
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="relative h-screen flex items-center justify-center overflow-hidden pt-20">
+        <div class="absolute inset-0 z-0 scale-110 animate-parallax">
+            <div class="absolute inset-0 bg-gradient-to-b from-surface/20 via-surface/60 to-surface z-10"></div>
+            <img 
+                src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070&auto=format&fit=crop" 
+                alt="Modern Architecture"
+                class="w-full h-full object-cover opacity-60"
+                referrerpolicy="no-referrer"
+            >
+        </div>
+
+        <div class="relative z-20 max-w-7xl mx-auto px-6 text-center">
+            <div class="animate-slide-up">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs font-bold uppercase tracking-widest mb-6">
+                    <i data-lucide="zap" class="w-3 h-3"></i>
+                    Special Exhibit: 2026
+                </div>
+                <h1 class="font-display text-5xl md:text-8xl font-black tracking-tight leading-[0.9] mb-8 lg:max-w-4xl mx-auto uppercase">
+                    The Algorithmic <br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand to-cyan-400">Architect</span>
+                </h1>
+                <p class="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+                    AI is not just a tool; it's a co-creator. Explore how machine intelligence is rewriting the rules of space, form, and function.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button class="bg-white text-black px-8 py-4 rounded-full font-bold flex items-center justify-center gap-2 hover:scale-105 transition-transform group">
+                        Start Exploring <i data-lucide="chevron-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                    <button class="border border-zinc-700 px-8 py-4 rounded-full font-bold hover:bg-zinc-800 transition-colors">
+                        Read the Manifesto
+                    </button>
+                </div>
+            </div>
+        </div>
     </section>
-  );
-};
 
-const Footer = () => {
-  return (
-    <footer className="py-12 border-t border-zinc-900 bg-zinc-950">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-        <div className="flex items-center gap-2 opacity-50">
-          <div className="w-6 h-6 bg-zinc-100 rounded-sm flex items-center justify-center">
-            <Layers className="w-3 h-3 text-black" />
-          </div>
-          <span className="font-display font-bold text-sm tracking-tighter uppercase">ArchiTech</span>
+    <!-- Main Content -->
+    <main>
+        <!-- Intro -->
+        <div id="intro" class="py-20 text-center px-6 max-w-4xl mx-auto section-reveal">
+            <p class="text-2xl md:text-4xl text-zinc-500 leading-tight font-light">
+                The intersection of <span class="text-white font-normal underline decoration-brand/50 underline-offset-8">computational creative power</span> and <span class="text-white font-normal underline decoration-cyan-500/50 underline-offset-8">physical manifestation</span> is creating a new vernacular.
+            </p>
         </div>
-        
-        <div className="text-zinc-500 text-xs flex gap-8">
-          <a href="#" className="hover:text-white">Privacy</a>
-          <a href="#" className="hover:text-white">Ethics</a>
-          <a href="#" className="hover:text-white">Copyright © 2026</a>
+
+        <!-- Capabilities -->
+        <section id="capabilities" class="py-32 relative">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="mb-20 section-reveal">
+                    <h2 class="font-display text-4xl md:text-6xl font-bold tracking-tight mb-6">Redefining the <br> Possible</h2>
+                    <div class="h-1 w-20 bg-brand mb-8"></div>
+                    <p class="text-zinc-400 max-w-xl text-lg font-light leading-relaxed">
+                        From the first pencil stroke to final assembly, AI agents are assisting architects in ways previously resigned to science fiction.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="p-8 rounded-2xl border border-zinc-800 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 hover:border-zinc-700 transition-all group cursor-default section-reveal">
+                        <div class="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mb-6 ring-1 ring-zinc-800 group-hover:scale-110 transition-transform">
+                            <i data-lucide="cpu" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-display text-xl font-bold mb-4">Generative Design</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed">Algorithmic explorations that optimize for spatial efficiency, structural integrity, and material usage.</p>
+                    </div>
+                    <div class="p-8 rounded-2xl border border-zinc-800 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 hover:border-zinc-700 transition-all group cursor-default section-reveal">
+                        <div class="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mb-6 ring-1 ring-zinc-800 group-hover:scale-110 transition-transform">
+                            <i data-lucide="globe" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-display text-xl font-bold mb-4">Environmental Simulation</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed">Real-time analysis of solar orientation, wind patterns, and thermal performance during the first draft.</p>
+                    </div>
+                    <div class="p-8 rounded-2xl border border-zinc-800 bg-gradient-to-br from-purple-500/20 to-pink-500/20 hover:border-zinc-700 transition-all group cursor-default section-reveal">
+                        <div class="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mb-6 ring-1 ring-zinc-800 group-hover:scale-110 transition-transform">
+                            <i data-lucide="bot" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-display text-xl font-bold mb-4">Robotic Fabrication</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed">Bridging the gap between code and concrete through automated 3D printing and precise assembly.</p>
+                    </div>
+                    <div class="p-8 rounded-2xl border border-zinc-800 bg-gradient-to-br from-orange-500/20 to-red-500/20 hover:border-zinc-700 transition-all group cursor-default section-reveal">
+                        <div class="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mb-6 ring-1 ring-zinc-800 group-hover:scale-110 transition-transform">
+                            <i data-lucide="layers" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-display text-xl font-bold mb-4">Parametric Workflows</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed">Complex geometries controlled by variables, allowing for infinite iterations with microscopic precision.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tools -->
+        <section id="tools" class="py-32 bg-zinc-950/50 border-y border-zinc-900">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="text-center mb-20 section-reveal">
+                    <span class="text-brand text-xs font-bold uppercase tracking-[0.3em] mb-4 block">The Ecosystem</span>
+                    <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">Intelligent Platforms</h2>
+                    <p class="text-zinc-500 max-w-2xl mx-auto">The tools of the trade are evolving. These platforms represent the bleeding edge of architectural AI integration.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Tool Cards -->
+                    <div class="p-6 rounded-2xl bg-surface border border-zinc-900 hover:border-brand/40 hover:bg-zinc-900/50 transition-all flex flex-col justify-between group section-reveal">
+                        <div>
+                            <span class="px-2 py-1 rounded-md bg-zinc-800 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4 inline-block group-hover:bg-brand/20 group-hover:text-brand transition-colors">Visualization</span>
+                            <h4 class="text-xl font-bold mb-2">Stable Diffusion</h4>
+                            <p class="text-zinc-500 text-sm leading-relaxed">Conceptual mood boarding and prompt-to-render workflows.</p>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-5 h-5 text-zinc-700 group-hover:text-brand transition-colors"></i>
+                        </div>
+                    </div>
+                    <div class="p-6 rounded-2xl bg-surface border border-zinc-900 hover:border-brand/40 hover:bg-zinc-900/50 transition-all flex flex-col justify-between group section-reveal">
+                        <div>
+                            <span class="px-2 py-1 rounded-md bg-zinc-800 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4 inline-block group-hover:bg-brand/20 group-hover:text-brand transition-colors">Site Analysis</span>
+                            <h4 class="text-xl font-bold mb-2">Autodesk Forma</h4>
+                            <p class="text-zinc-500 text-sm leading-relaxed">AI-driven site planning and microclimate simulations.</p>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-5 h-5 text-zinc-700 group-hover:text-brand transition-colors"></i>
+                        </div>
+                    </div>
+                    <div class="p-6 rounded-2xl bg-surface border border-zinc-900 hover:border-brand/40 hover:bg-zinc-900/50 transition-all flex flex-col justify-between group section-reveal">
+                        <div>
+                            <span class="px-2 py-1 rounded-md bg-zinc-800 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4 inline-block group-hover:bg-brand/20 group-hover:text-brand transition-colors">Parametric</span>
+                            <h4 class="text-xl font-bold mb-2">Grasshopper + AI</h4>
+                            <p class="text-zinc-500 text-sm leading-relaxed">Integrating machine learning models into visual scripting.</p>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <i data-lucide="arrow-up-right" class="w-5 h-5 text-zinc-700 group-hover:text-brand transition-colors"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Impact -->
+        <section id="cases" class="py-32 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex flex-col lg:flex-row gap-16 items-center">
+                    <div class="lg:w-1/2 section-reveal">
+                        <div class="relative rounded-3xl overflow-hidden aspect-video group">
+                            <img src="https://images.unsplash.com/photo-1518005020251-58296d8f817d?q=80&w=2070&auto=format&fit=crop" alt="Case Study" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerpolicy="no-referrer">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                            <div class="absolute bottom-8 left-8">
+                                <span class="text-brand text-xs font-bold uppercase mb-2 block">Case Study #01</span>
+                                <h3 class="text-2xl font-bold text-white">The Neural Pavilion</h3>
+                                <p class="text-zinc-300 text-sm max-w-xs mt-1">Optimizing carbon footprint and modularity through evolutionary algorithms.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:w-1/2 space-y-8 section-reveal">
+                        <h2 class="font-display text-4xl md:text-5xl font-bold">Tangible Transformation</h2>
+                        <p class="text-zinc-400 text-lg leading-relaxed font-light italic">
+                            "We used to spend months on site analysis and feasibility studies. Now, we run 10,000 simulations in an afternoon, finding solutions we couldn't have imagined."
+                        </p>
+                        <div class="grid grid-cols-2 gap-8">
+                            <div>
+                                <div class="text-4xl font-display font-black text-brand mb-1">45%</div>
+                                <div class="text-xs uppercase tracking-widest text-zinc-500 font-bold">Reduction in Material waste</div>
+                            </div>
+                            <div>
+                                <div class="text-4xl font-display font-black text-brand mb-1">10x</div>
+                                <div class="text-xs uppercase tracking-widest text-zinc-500 font-bold">Faster Iteration Cycles</div>
+                            </div>
+                        </div>
+                        <button class="flex items-center gap-2 font-bold hover:text-brand transition-colors pt-4 group">
+                            View All Exhibits <i data-lucide="arrow-up-right" class="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Future -->
+        <section id="future" class="py-32 relative bg-surface">
+            <div class="max-w-5xl mx-auto px-6 text-center">
+                <div class="p-16 rounded-[3rem] bg-gradient-to-b from-zinc-900 to-transparent border border-zinc-800/50 relative overflow-hidden section-reveal">
+                    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/2 bg-brand/10 blur-[120px] rounded-full pointer-events-none"></div>
+                    <h2 class="font-display text-4xl md:text-7xl font-bold mb-8 uppercase tracking-tighter">The Responsive City</h2>
+                    <p class="text-zinc-400 text-lg md:text-xl leading-relaxed mb-12 max-w-2xl mx-auto font-light">
+                        We are moving toward buildings that think. AI-driven urban operating systems that adjust to social, environmental, and structural changes in real-time.
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-3">
+                        <span class="px-4 py-2 bg-zinc-900 border border-zinc-800 text-xs font-bold text-zinc-400 rounded-full">Smart Fabrics</span>
+                        <span class="px-4 py-2 bg-zinc-900 border border-zinc-800 text-xs font-bold text-zinc-400 rounded-full">Adaptive Facades</span>
+                        <span class="px-4 py-2 bg-zinc-900 border border-zinc-800 text-xs font-bold text-zinc-400 rounded-full">Digital Twins</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="py-20 relative">
+            <div class="max-w-7xl mx-auto px-6 border-t border-zinc-900 pt-32 pb-10">
+                <div class="bg-brand rounded-[2.5rem] p-12 md:p-24 flex flex-col md:flex-row items-center justify-between gap-12 text-white overflow-hidden relative section-reveal">
+                    <div class="absolute top-0 opacity-10 right-0 w-1/2 h-full bg-white skew-x-[-20deg] translate-x-1/2"></div>
+                    <div class="relative z-10">
+                        <h2 class="font-display text-4xl md:text-6xl font-bold mb-4 tracking-tighter uppercase">Ready for the shift?</h2>
+                        <p class="text-white/80 max-w-md text-lg">Join our weekly intelligence update on the future of spatial intelligence.</p>
+                    </div>
+                    <div class="w-full md:w-auto relative z-10 flex flex-col sm:flex-row gap-4">
+                        <input type="email" placeholder="name@studio.com" class="bg-white/10 border border-white/20 px-8 py-4 rounded-full text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-80">
+                        <button class="bg-white text-brand px-10 py-4 rounded-full font-bold hover:bg-zinc-100 transition-colors whitespace-nowrap">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-zinc-900 bg-zinc-950">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex items-center gap-2 opacity-50">
+                <div class="w-6 h-6 bg-zinc-100 rounded-sm flex items-center justify-center">
+                    <i data-lucide="layers" class="w-3 h-3 text-black"></i>
+                </div>
+                <span class="font-display font-bold text-sm tracking-tighter uppercase">ArchiTech</span>
+            </div>
+            <div class="text-zinc-500 text-xs flex gap-8">
+                <a href="#" class="hover:text-white">Privacy</a>
+                <a href="#" class="hover:text-white">Ethics</a>
+                <a href="#" class="hover:text-white">2026 ArchiTech</a>
+            </div>
+            <div class="flex gap-4">
+                <div class="w-8 h-8 rounded-full border border-zinc-800 flex items-center justify-center hover:border-brand cursor-pointer transition-colors"><i data-lucide="globe" class="w-4 h-4 text-zinc-500"></i></div>
+                <div class="w-8 h-8 rounded-full border border-zinc-800 flex items-center justify-center hover:border-brand cursor-pointer transition-colors"><i data-lucide="cpu" class="w-4 h-4 text-zinc-500"></i></div>
+            </div>
         </div>
-        
-        <div className="flex gap-4">
-          {/* Social Icons Placeholder */}
-          <div className="w-8 h-8 rounded-full border border-zinc-800 flex items-center justify-center hover:border-brand cursor-pointer transition-colors"><Globe className="w-4 h-4 text-zinc-500" /></div>
-          <div className="w-8 h-8 rounded-full border border-zinc-800 flex items-center justify-center hover:border-brand cursor-pointer transition-colors"><Cpu className="w-4 h-4 text-zinc-500" /></div>
-        </div>
-      </div>
     </footer>
-  );
-};
 
-// --- Main Application ---
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
 
-export default function App() {
-  return (
-    <div className="min-h-screen bg-surface selection:bg-brand/30">
-      <Navbar />
-      <main>
-        <Hero />
-        <div id="intro" className="py-20 text-center px-6 max-w-4xl mx-auto">
-          <motion.p 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ margin: "-100px" }}
-            className="text-2xl md:text-4xl text-zinc-500 leading-tight font-light"
-          >
-            The intersection of <span className="text-white font-normal underline decoration-brand/50 underline-offset-8">computational creative power</span> and <span className="text-white font-normal underline decoration-cyan-500/50 underline-offset-8">physical manifestation</span> is creating a new vernacular.
-          </motion.p>
-        </div>
-        <FeatureSection />
-        <ToolsBento />
-        <ImpactStudy />
-        <FutureSection />
-        <CTA />
-      </main>
-      <Footer />
-    </div>
-  );
-}
+        // Mobile Menu Toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = document.getElementById('menu-icon');
+        const menuItems = document.querySelectorAll('.menu-item');
+
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            menuIcon.setAttribute('data-lucide', isOpen ? 'x' : 'menu');
+            lucide.createIcons(); // Refresh icons
+        });
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                menuIcon.setAttribute('data-lucide', 'menu');
+                lucide.createIcons();
+            });
+        });
+
+        // Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('bg-surface/80', 'backdrop-blur-md', 'border-b', 'border-zinc-800/50', 'py-4');
+                navbar.classList.remove('bg-transparent', 'py-6');
+            } else {
+                navbar.classList.remove('bg-surface/80', 'backdrop-blur-md', 'border-b', 'border-zinc-800/50', 'py-4');
+                navbar.classList.add('bg-transparent', 'py-6');
+            }
+        });
+
+        // Scroll Reveal Animation (Intersection Observer)
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.section-reveal').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
