@@ -1,433 +1,678 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowRight, Menu, X, Instagram, Linkedin, Mail } from 'lucide-react';
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Architectural OS Portfolio</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap');
 
-// --- Types & Data ---
+        :root {
+            --bg: #FCFCFC;
+            --ink: #1A1A1A;
+            --border: rgba(26, 26, 26, 0.15); /* Precise thin lines */
+            --grid-line: #1A1A1A;
+            --accent-gray: #E0E0E0;
+            --accent-beige: #F8F5F0;
+            --accent-sage: #F4F6F3;
+            --transition: 0.7s cubic-bezier(0.2, 0, 0, 1);
+            --transition-fast: 0.4s cubic-bezier(0.2, 0, 0, 1);
+        }
 
-type View = 'home' | 'works' | 'studio' | 'contact' | 'project-detail';
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
 
-interface Project {
-  id: string;
-  title: string;
-  category: string;
-  year: string;
-  description: string;
-  image: string;
-}
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
 
-const PROJECTS: Project[] = [
-  {
-    id: 'p1',
-    title: 'The Monolith Pavilion',
-    category: 'Cultural',
-    year: '2024',
-    description: 'A structural exploration of concrete and light, designed as a contemplative space within an urban park.',
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop'
-  },
-  {
-    id: 'p2',
-    title: 'Void Residence',
-    category: 'Residential',
-    year: '2023',
-    description: 'A brutalist-inspired family home focusing on interior voids and carved-out spaces for natural ventilation.',
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop'
-  },
-  {
-    id: 'p3',
-    title: 'Nordic Light Library',
-    category: 'Public',
-    year: '2024',
-    description: 'An expansive timber structure that maximizes seasonal daylighting through a complex sawtooth roof system.',
-    image: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?q=80&w=2070&auto=format&fit=crop'
-  },
-  {
-    id: 'p4',
-    title: 'Oasis Corporate HQ',
-    category: 'Commercial',
-    year: '2022',
-    description: 'A sustainable office complex integrating vertical gardens and modular glass facades for energetic efficiency.',
-    image: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?q=80&w=2070&auto=format&fit=crop'
-  }
-];
+        .mono { font-family: 'JetBrains Mono', monospace; }
 
-// --- Components ---
+        /* --- LAYER 0: THE HORIZONTAL DESKTOPS --- */
+        #os-desktop {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            cursor: grab;
+            scrollbar-width: none;
+        }
 
-const Navbar = ({ onViewChange, currentView }: { onViewChange: (v: View) => void, currentView: View }) => (
-  <nav className="fixed top-0 left-0 w-full z-50 p-6 flex justify-between items-center text-paper-light">
-    <div className="flex flex-col">
-      <div 
-        className="cursor-pointer font-sans text-2xl font-light tracking-[0.4em] leading-none uppercase"
-        onClick={() => onViewChange('home')}
-      >
-        AETERNA
-      </div>
-      <p className="text-[10px] tracking-[0.3em] text-white/40 mt-2 uppercase hidden md:block">Architectural Studio / London — Zurich</p>
+        #os-desktop::-webkit-scrollbar { display: none; }
+
+        .desktop-panel {
+            min-width: 100vw;
+            height: 100vh;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 10vw;
+            transition: var(--transition);
+        }
+
+        .desktop-panel h2 {
+            font-size: 8vw;
+            font-weight: 300;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .desktop-panel .panel-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            opacity: 0.6;
+            margin-bottom: 2rem;
+        }
+
+        .desktop-panel .explore-btn {
+            padding: 1rem 3rem;
+            border: 1px solid var(--ink);
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.25em;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            background: transparent;
+        }
+
+        .desktop-panel .explore-btn:hover {
+            background: var(--ink);
+            color: var(--bg);
+        }
+
+        /* Decoration */
+        .desktop-panel::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 85%;
+            height: 85%;
+            transform: translate(-50%, -50%);
+            border: 0.5px solid rgba(26, 26, 26, 0.05);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* --- LAYER 1: DETAIL VIEWS (GEOMETRIC BALANCE) --- */
+        .detail-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 100;
+            transform: translateY(100%);
+            transition: var(--transition);
+            overflow-y: auto;
+            visibility: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-view.active {
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .detail-header {
+            padding: 2rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 110;
+            border-bottom: 1px solid var(--ink);
+        }
+
+        .detail-header .header-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .micro-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            opacity: 0.5;
+        }
+
+        .detail-header h3 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+        }
+
+        .back-btn {
+            background: var(--ink);
+            color: var(--bg);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .back-btn:hover {
+            opacity: 0.8;
+            transform: translateX(-5px);
+        }
+
+        /* --- BENTO GRID STYLE --- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: 250px;
+            gap: 1px;
+            background: var(--grid-line);
+            padding: 1px;
+            flex: 1;
+        }
+
+        .grid-item {
+            background: var(--bg);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid-item:hover { background: #F5F5F5; }
+
+        .grid-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(1);
+            opacity: 0.9;
+            transition: var(--transition);
+        }
+
+        .grid-item:hover img {
+            filter: grayscale(0);
+            opacity: 1;
+            transform: scale(1.02);
+        }
+
+        .grid-item .item-info {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            background: var(--ink);
+            color: var(--bg);
+            padding: 0.4rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            opacity: 0;
+            transition: var(--transition-fast);
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+
+        .grid-item:hover .item-info {
+            opacity: 1;
+            transform: scaleX(1);
+        }
+
+        /* Grid Item Sizes */
+        .grid-item.large { grid-column: span 8; grid-row: span 3; }
+        .grid-item.vertical { grid-column: span 4; grid-row: span 3; }
+        .grid-item.horizontal { grid-column: span 8; grid-row: span 2; }
+        .grid-item.small { grid-column: span 4; grid-row: span 2; }
+
+        /* --- BIO DETAIL --- */
+        .bio-content {
+            padding: 4rem 3rem;
+            max-width: 1000px;
+            align-self: flex-start;
+            flex: 1;
+            width: 100%;
+        }
+
+        .bio-section { margin-bottom: 6rem; }
+
+        .bio-section h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+            margin-bottom: 2rem;
+            opacity: 0.4;
+        }
+
+        .bio-item {
+            border-top: 1px solid rgba(26, 26, 26, 0.1);
+            padding: 1.5rem 0;
+            display: grid;
+            grid-template-columns: 200px 1fr;
+        }
+
+        .bio-item .year { font-family: 'JetBrains Mono', monospace; font-size: 12px; opacity: 0.5; }
+        .bio-text p { font-size: 1.5rem; font-weight: 300; line-height: 1.3; letter-spacing: -0.02em; }
+
+        /* --- LAYER 2: PROJECT DETAIL --- */
+        #project-detail {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            color: var(--ink);
+            z-index: 200;
+            display: flex;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        #project-detail.active { opacity: 1; visibility: visible; }
+
+        .project-image-side { flex: 1; height: 100%; overflow: hidden; }
+        .project-image-side img { width: 100%; height: 100%; object-fit: cover; }
+
+        .project-info-side {
+            width: 450px;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            border-left: 1px solid var(--ink);
+        }
+
+        .close-project {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: var(--ink);
+            color: var(--bg);
+            border: none;
+            padding: 1rem 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            z-index: 210;
+        }
+
+        /* --- NAVIGATION UI (FOOTER OS STYLE) --- */
+        .pagination-dots {
+            position: fixed;
+            bottom: 2rem;
+            left: 3rem;
+            right: 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .perspective-nav {
+            display: flex;
+            gap: 1px;
+            background: var(--ink);
+            border: 1px solid var(--ink);
+        }
+
+        .nav-tab {
+            padding: 0.5rem 1.5rem;
+            background: var(--bg);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.5;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .nav-tab.active { opacity: 1; background: var(--ink); color: var(--bg); }
+
+        .orbit-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            opacity: 0.4;
+        }
+
+        /* --- PALETTES --- */
+        .palette-gray { --bg: #FCFCFC; }
+        .palette-beige { --bg: #F8F5F0; }
+        .palette-sage { --bg: #F4F6F3; }
+
+        /* --- DECORATIVE OVERLAY --- */
+        .overlay-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .overlay-line-v { position: absolute; top: 0; width: 1px; height: 100%; background: var(--ink); opacity: 0.02; }
+        .overlay-line-h { position: absolute; left: 0; height: 1px; width: 100%; background: var(--ink); opacity: 0.02; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .grid-item.large, .grid-item.horizontal, .grid-item.vertical, .grid-item.small {
+                grid-column: span 12;
+                grid-row: span 2;
+            }
+            .project-info-side { width: 100%; position: absolute; bottom: 0; background: rgba(252,252,252,0.9); backdrop-filter: blur(10px); }
+            .detail-header h3 { font-size: 1.5rem; }
+            .bio-item { grid-template-columns: 1fr; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DECORATIVE OVERLAY -->
+    <div class="overlay-lines">
+        <div class="overlay-line-v" style="left: 25%"></div>
+        <div class="overlay-line-v" style="left: 50%"></div>
+        <div class="overlay-line-v" style="left: 75%"></div>
+        <div class="overlay-line-h" style="top: 50%"></div>
     </div>
-    <div className="flex gap-12 text-[10px] tracking-[0.2em] uppercase font-medium">
-      <button 
-        onClick={() => onViewChange('works')}
-        className={`hover:text-white transition-colors ${currentView === 'works' ? 'text-white' : 'text-white/40'}`}
-      >
-        Works
-      </button>
-      <button 
-        onClick={() => onViewChange('studio')}
-        className={`hover:text-white transition-colors ${currentView === 'studio' ? 'text-white' : 'text-white/40'}`}
-      >
-        Studio
-      </button>
-      <button 
-        onClick={() => onViewChange('contact')}
-        className={`hover:text-white transition-colors ${currentView === 'contact' ? 'text-white' : 'text-white/40'}`}
-      >
-        Inquiry
-      </button>
+
+    <!-- LAYER 0: INTERFACE -->
+    <div id="os-desktop">
+        <section class="desktop-panel" id="panel-1">
+            <span class="panel-tag">01 / Foundation</span>
+            <h2>the bio</h2>
+            <button class="explore-btn" onclick="openDetail('bio')">read more</button>
+        </section>
+
+        <section class="desktop-panel" id="panel-2">
+            <span class="panel-tag">02 / Portfolio</span>
+            <h2>architectural design</h2>
+            <button class="explore-btn" onclick="openDetail('arch')">view works</button>
+        </section>
+
+        <section class="desktop-panel" id="panel-3">
+            <span class="panel-tag">03 / Exploration</span>
+            <h2>digital architecture</h2>
+            <button class="explore-btn" onclick="openDetail('digital')">explore</button>
+        </section>
+
+        <section class="desktop-panel" id="panel-4">
+            <span class="panel-tag">04 / Intersection</span>
+            <h2>other works</h2>
+            <button class="explore-btn" onclick="openDetail('other')">curation</button>
+        </section>
+
+        <section class="desktop-panel" id="panel-5">
+            <span class="panel-tag">05 / Relation</span>
+            <h2>contact</h2>
+            <button class="explore-btn" onclick="openDetail('contact')">reach out</button>
+        </section>
     </div>
-  </nav>
-);
 
-const BackButton = ({ onClick }: { onClick: () => void }) => (
-  <button 
-    onClick={onClick}
-    className="fixed top-24 left-6 z-50 flex items-center gap-4 text-[10px] uppercase tracking-[0.2em] font-semibold text-white/60 hover:text-white transition-all"
-  >
-    <div className="w-8 h-[1px] bg-current"></div> Back to Grid
-  </button>
-);
-
-export default function App() {
-  const [view, setView] = useState<View>('home');
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [view, selectedProject]);
-
-  const handleProjectClick = (project: Project) => {
-    setSelectedProject(project);
-    setView('project-detail');
-  };
-
-  const getPageBg = () => {
-    switch (view) {
-      case 'works': return 'bg-teal-dark'; 
-      case 'studio': return 'bg-accent-sand text-ink-accent'; 
-      case 'contact': return 'bg-obsidian'; 
-      default: return 'bg-obsidian dot-pattern';
-    }
-  };
-
-  const getTextColor = () => {
-    if (view === 'studio') return 'text-ink-accent';
-    return 'text-paper-light';
-  };
-
-  return (
-    <div className={`min-h-screen transition-colors duration-700 ${getPageBg()} ${getTextColor()} font-sans`}>
-      <Navbar onViewChange={setView} currentView={view} />
-
-      <AnimatePresence mode="wait">
-        {view !== 'home' && <BackButton onClick={() => setView(view === 'project-detail' ? 'works' : 'home')} />}
-
-        {view === 'home' && (
-          <motion.main 
-            key="home"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="p-6 pt-32 max-w-[1600px] mx-auto"
-          >
-            <div className="architectural-grid">
-              {/* Tile 1: Hero Featured */}
-              <div 
-                className="col-span-12 md:col-span-8 lg:col-span-9 row-span-4 bg-teal-dark border border-white/5 overflow-hidden group cursor-pointer relative min-h-[400px] flex flex-col justify-between p-10"
-                onClick={() => setView('works')}
-              >
-                <div className="flex justify-between items-start z-10">
-                  <span className="text-[10px] font-mono text-white/30 tracking-[0.2em]">01 / 04</span>
-                  <span className="text-[10px] tracking-[0.4em] text-white/30 uppercase italic font-serif">Selected Works</span>
-                </div>
-                <div className="z-10">
-                  <h2 className="text-5xl md:text-7xl font-serif italic mb-4 tracking-tight">Obsidian House</h2>
-                  <p className="text-sm text-white/50 max-w-sm font-light leading-relaxed">An exploration of volcanic materiality and subterranean light in the Swiss Alps.</p>
-                </div>
-                <div className="absolute top-0 right-0 w-full h-full opacity-40 group-hover:opacity-60 transition-opacity duration-1000">
-                    <img 
-                      src={PROJECTS[0].image} 
-                      className="w-full h-full object-cover mix-blend-overlay grayscale"
-                      referrerPolicy="no-referrer"
-                    />
-                </div>
-                <div className="absolute bottom-0 right-0 p-12 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
-                  <div className="w-80 h-80 border-[1px] border-white rounded-full"></div>
-                </div>
-              </div>
-
-              {/* Tile 2: Studio */}
-              <div 
-                className="col-span-12 md:col-span-4 lg:col-span-3 row-span-2 bg-accent-sand text-ink-accent p-10 flex flex-col justify-between group cursor-pointer hover:brightness-95 transition-all duration-500 border border-white/5"
-                onClick={() => setView('studio')}
-              >
-                <div className="flex justify-between text-[10px] tracking-[0.3em] font-semibold uppercase opacity-50">
-                  <span>Practice</span>
-                  <span>EST. 2014</span>
-                </div>
-                <h3 className="text-3xl font-serif italic font-medium tracking-tight leading-tight">"Architecture is the learned game of forms assembled in the light."</h3>
-                <div className="flex items-center gap-4 text-[10px] font-bold tracking-[0.3em] uppercase">
-                  <div className="w-8 h-[1px] bg-current"></div> Read Manifesto
-                </div>
-              </div>
-
-              {/* Tile 3: Contact */}
-              <div 
-                className="col-span-6 md:col-span-2 lg:col-span-1 row-span-2 bg-gray-dark border border-white/5 p-6 flex flex-col justify-between group cursor-pointer hover:bg-black transition-all duration-500"
-                onClick={() => setView('contact')}
-              >
-                <div className="text-[10px] tracking-[0.3em] uppercase font-bold opacity-30">Inquiry</div>
-                <div className="flex justify-center items-center h-full">
-                  <div className="w-10 h-10 border border-white/10 rounded-full flex items-center justify-center group-hover:border-white/30 transition-all">
-                    <Mail size={16} className="opacity-40 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Tile 4: Sub-feature */}
-              <div 
-                className="col-span-6 md:col-span-2 lg:col-span-2 row-span-2 bg-slate-darker border border-white/5 p-10 flex flex-col justify-end group cursor-pointer hover:bg-opacity-80 transition-all duration-500"
-                onClick={() => handleProjectClick(PROJECTS[1])}
-              >
-                <div className="text-[10px] tracking-[0.4em] uppercase font-bold opacity-30 mb-auto">Featured</div>
-                <h4 className="text-2xl font-serif italic mb-2 leading-none">{PROJECTS[1].title}</h4>
-                <div className="text-[10px] tracking-[0.2em] font-medium opacity-40 uppercase">Archived {PROJECTS[1].year}</div>
-              </div>
-
-              {/* Individual Scroll of Projects */}
-              {PROJECTS.map((project, idx) => (
-                <div 
-                  key={project.id}
-                  className={`col-span-12 md:col-span-6 lg:col-span-4 row-span-3 bg-white/5 overflow-hidden group cursor-pointer border border-white/10 flex flex-col hover:bg-white/10 transition-all duration-700 ${idx === 0 ? 'hidden' : ''}`}
-                  onClick={() => handleProjectClick(project)}
-                >
-                  <div className="flex-1 overflow-hidden">
-                    <img 
-                      src={project.image} 
-                      className="w-full h-full object-cover grayscale opacity-30 group-hover:opacity-70 transition-all duration-1000"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <div className="p-8 flex justify-between items-end">
-                    <div>
-                      <div className="text-[10px] tracking-[0.4em] uppercase font-bold opacity-30 mb-2 italic font-serif ">{project.category}</div>
-                      <h5 className="text-xl font-serif italic tracking-tight">{project.title}</h5>
-                    </div>
-                    <div className="text-[10px] tracking-[0.2em] font-medium opacity-30 uppercase">{project.year}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.main>
-        )}
-
-        {view === 'works' && (
-          <motion.div 
-            key="works"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="p-6 pt-48 max-w-[1400px] mx-auto min-h-screen"
-          >
-            <div className="mb-24 flex flex-col md:flex-row justify-between items-end gap-10">
-              <div className="max-w-2xl">
-                <span className="text-[10px] tracking-[0.5em] text-white/30 uppercase block mb-6">Archive Vol. II</span>
-                <h1 className="text-7xl md:text-9xl font-serif italic tracking-tighter leading-none mb-10">Historical<br/>Works</h1>
-              </div>
-              <p className="max-w-xs text-xs tracking-[0.1em] text-white/40 uppercase leading-relaxed font-medium text-right underline underline-offset-8">
-                A non-linear collection of spatial explorations and finished architectural works.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {PROJECTS.map((project) => (
-                <motion.div 
-                  layoutId={`project-${project.id}`}
-                  key={project.id}
-                  className="bg-white/5 backdrop-blur-sm group cursor-pointer border border-white/5 overflow-hidden transition-all duration-700"
-                  onClick={() => handleProjectClick(project)}
-                >
-                  <div className="aspect-[4/5] overflow-hidden relative">
-                    <img 
-                      src={project.image} 
-                      className="w-full h-full object-cover grayscale brightness-50 group-hover:brightness-100 group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div class="absolute top-4 right-4 text-[9px] font-mono text-white/40">{project.year}</div>
-                  </div>
-                  <div className="p-8">
-                    <div className="flex justify-between items-start mb-6">
-                      <h3 className="text-2xl font-serif italic tracking-tight">{project.title}</h3>
-                    </div>
-                    <div className="h-[1px] w-full bg-white/10 mb-6" />
-                    <div className="flex justify-between items-center text-[10px] tracking-[0.4em] uppercase font-bold text-white/30">
-                      <span>{project.category}</span>
-                      <div className="w-8 h-[1px] bg-current opacity-30"></div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {view === 'project-detail' && selectedProject && (
-          <motion.div 
-            key="detail"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="min-h-screen pt-48"
-          >
-            <div className="max-w-[1400px] mx-auto px-6">
-              <div className="flex flex-col lg:flex-row gap-24">
-                <div className="lg:w-1/2">
-                  <span className="text-[10px] tracking-[0.5em] text-white/30 uppercase block mb-8 italic font-serif">Project Entry 01 / {PROJECTS.length}</span>
-                  <motion.h1 
-                    layoutId={`title-${selectedProject.id}`}
-                    className="text-6xl md:text-8xl font-serif italic tracking-tighter mb-12 leading-none"
-                  >
-                    {selectedProject.title}
-                  </motion.h1>
-                  
-                  <div className="flex gap-16 mb-16 text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 border-t border-white/5 pt-10">
-                    <div>
-                      <div className="mb-4">Location</div>
-                      <div className="text-white">Oslo / Norway</div>
-                    </div>
-                    <div>
-                      <div className="mb-4">Typology</div>
-                      <div className="text-white">{selectedProject.category}</div>
-                    </div>
-                    <div>
-                      <div className="mb-4">Status</div>
-                      <div className="text-white">Completed</div>
-                    </div>
-                  </div>
-
-                  <p className="text-2xl md:text-3xl font-serif italic leading-relaxed mb-16 text-white/70">
-                    {selectedProject.description}
-                  </p>
-
-                  <div className="space-y-6 opacity-40 text-xs tracking-wide leading-relaxed max-w-lg font-medium">
-                    <p>
-                      The spatial logic of this project derived from a rigorous study of volcanic materiality and subterranean light. By utilizing carved-out voids, we allowed for an architectural dialogue between the interior and the surrounding landscape.
-                    </p>
-                    <p>
-                      Structural honesty remains a core tenet of the design, where exposed concrete and shadow play create moments of transcendence.
-                    </p>
-                  </div>
-                </div>
-                <div className="lg:w-1/2">
-                  <motion.div 
-                    layoutId={`project-${selectedProject.id}`}
-                    className="aspect-[3/4] bg-teal-dark border border-white/5 relative overflow-hidden"
-                  >
-                    <img 
-                      src={selectedProject.image} 
-                      className="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition-all duration-1000"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 dot-pattern opacity-20"></div>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {view === 'studio' && (
-          <motion.div 
-            key="studio"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="p-6 pt-48 max-w-[1200px] mx-auto min-h-screen"
-          >
-            <span className="text-[10px] tracking-[0.5em] uppercase font-bold opacity-30 block mb-10">Our DNA / Context</span>
-            <h1 className="text-8xl md:text-[12rem] font-serif italic tracking-tighter mb-20 leading-none">STUDIO</h1>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-24 text-2xl font-serif italic leading-loose text-ink-accent">
-              <div className="space-y-12">
-                <p>
-                  Based in London and Zurich, we are an architectural practice dedicated to the intersection of site-specificity and structural innovation.
-                </p>
-                <p>
-                  Our work is defined by a commitment to volcanic materiality and the profound human experience of space. We believe that architecture should be quiet yet impactful, providing a legacy of forms assembled in the light.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 gap-16">
-                <div className="border-t border-ink-accent/10 pt-10">
-                  <h3 className="text-xs uppercase tracking-[0.4em] font-bold mb-6 opacity-40">Ethics / Vision</h3>
-                  <p className="text-lg font-sans not-italic font-medium leading-relaxed uppercase tracking-tight">We prioritize material longevity and lifecycle impact, finding beauty in the aging of honest surfaces.</p>
-                </div>
-                <div className="border-t border-ink-accent/10 pt-10">
-                  <h3 className="text-xs uppercase tracking-[0.4em] font-bold mb-6 opacity-40">Method / Process</h3>
-                  <p className="text-lg font-sans not-italic font-medium leading-relaxed uppercase tracking-tight">Iterative modeling, material testing, and a close collaboration with local artisans ensure structural integrity.</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {view === 'contact' && (
-          <motion.div 
-            key="contact"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -40 }}
-            className="fixed inset-0 flex items-center justify-center p-6 bg-obsidian dot-pattern"
-          >
-            <div className="max-w-[1400px] w-full grid grid-cols-1 md:grid-cols-2 gap-32 items-end">
-              <div>
-                <span className="text-[10px] tracking-[0.6em] text-white/30 uppercase block mb-10 italic font-serif">Contact / Inquiry</span>
-                <h1 className="text-8xl md:text-[14rem] font-serif italic tracking-tighter text-white leading-none">INquiry.</h1>
-                <div className="mt-20 space-y-8">
-                  <div className="flex items-center gap-6 group cursor-pointer">
-                    <div className="w-12 h-12 border border-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500">
-                      <Instagram size={18} />
-                    </div>
-                    <span className="uppercase tracking-[0.4em] text-[10px] font-bold text-white/30 group-hover:text-white transition-colors">@aeterna.studio</span>
-                  </div>
-                </div>
-              </div>
-              <div className="text-white space-y-20">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-16">
-                  <div className="space-y-6">
-                    <h3 className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30 border-b border-white/5 pb-4">London</h3>
-                    <p className="text-xl font-serif italic text-white/70">Worship St, Shoreditch<br/>EC2A 2DX London</p>
-                  </div>
-                  <div className="space-y-6">
-                    <h3 className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30 border-b border-white/5 pb-4">Zurich</h3>
-                    <p className="text-xl font-serif italic text-white/70">Hardstrasse 201<br/>8005 Zürich</p>
-                  </div>
-                </div>
-                <div className="pt-16 border-t border-white/5 flex flex-col gap-4">
-                  <span className="text-[10px] tracking-[0.4em] uppercase font-bold opacity-30">Direct Correspondence</span>
-                  <a href="mailto:hello@aeterna.studio" className="text-4xl md:text-6xl font-serif italic hover:text-white/60 transition-all">hello@aeterna.studio</a>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <footer className="p-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 mt-32 text-[9px] tracking-[0.3em] uppercase font-medium text-white/30">
-        <div>© 2024 AETERNA Studio. All Rights Reserved.</div>
-        <div className="flex gap-12 font-bold italic font-serif">
-          <span className="cursor-pointer hover:text-white transition-colors">Instagram</span>
-          <span className="cursor-pointer hover:text-white transition-colors">LinkedIn</span>
-          <span className="cursor-pointer hover:text-white transition-colors">Journal</span>
+    <!-- UI ELEMENTS -->
+    <div class="pagination-dots">
+        <div class="perspective-nav">
+            <div class="nav-tab active" onclick="scrollToPanel(0)">01 BIO</div>
+            <div class="nav-tab" onclick="scrollToPanel(1)">02 ARCH DESIGN</div>
+            <div class="nav-tab" onclick="scrollToPanel(2)">03 DIGITAL ARCH</div>
+            <div class="nav-tab" onclick="scrollToPanel(3)">04 OTHER</div>
+            <div class="nav-tab" onclick="scrollToPanel(4)">05 CONTACT</div>
         </div>
-      </footer>
+        <div class="orbit-label">Orbit_System_V1.0</div>
     </div>
-  );
-}
+
+    <!-- LAYER 1: BIO DETAIL -->
+    <div id="view-bio" class="detail-view">
+        <header class="detail-header">
+            <div class="header-group">
+                <span class="micro-label">Identity_Module</span>
+                <h3>Curriculum Vitae</h3>
+            </div>
+            <button class="back-btn" onclick="closeDetail('bio')">Return_Layer_0</button>
+        </header>
+        <div class="bio-content">
+            <div class="bio-section">
+                <h4>Biography</h4>
+                <div class="bio-text">
+                    <p>Focused on the intersection of structural logic and minimalist aesthetics, I craft environments that breathe. With over a decade of experience in residential and public infrastructure, my work prioritizes the dialogue between light, void, and material honesty.</p>
+                </div>
+            </div>
+            <div class="bio-section">
+                <h4>Experience</h4>
+                <div class="bio-item">
+                    <span class="year">2022 — Present</span>
+                    <div class="bio-text">
+                        <p>Principal Architect at Studio Void, Berlin</p>
+                    </div>
+                </div>
+                <div class="bio-item">
+                    <span class="year">2018 — 2022</span>
+                    <div class="bio-text">
+                        <p>Senior Designer at Mono Architects, Tokyo</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bio-section">
+                <h4>Recognition</h4>
+                <div class="bio-item">
+                    <span class="year">2023</span>
+                    <div class="bio-text">
+                        <p>Minimalist Design Award — Silver Medal</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYER 1: ARCH DESIGN GRID -->
+    <div id="view-arch" class="detail-view palette-gray">
+        <header class="detail-header">
+            <div class="header-group">
+                <span class="micro-label">Catalog_V1</span>
+                <h3>Architectural Design</h3>
+            </div>
+            <button class="back-btn" onclick="closeDetail('arch')">Return_Layer_0</button>
+        </header>
+        <div class="grid-container">
+            <div class="grid-item large" onclick="openProject('https://picsum.photos/seed/arch1/1920/1080', 'The Concrete Monolith', 'A study of brutalist volume and shadow.')">
+                <img src="https://picsum.photos/seed/arch1/1200/800" alt="Work 1" referrerPolicy="no-referrer">
+                <div class="item-info">01 / The Monolith</div>
+            </div>
+            <div class="grid-item vertical" onclick="openProject('https://picsum.photos/seed/arch2/1080/1920', 'Light Shaft Residence', 'Chasing the zenithal light in a dense urban core.')">
+                <img src="https://picsum.photos/seed/arch2/800/1200" alt="Work 2" referrerPolicy="no-referrer">
+                <div class="item-info">02 / Shaft</div>
+            </div>
+            <div class="grid-item small" onclick="openProject('https://picsum.photos/seed/arch3/1200/800', 'Glass Pavillion', 'Transparency as a structural element.')">
+                <img src="https://picsum.photos/seed/arch3/800/600" alt="Work 3" referrerPolicy="no-referrer">
+                <div class="item-info">03 / Pavillion</div>
+            </div>
+            <div class="grid-item horizontal" onclick="openProject('https://picsum.photos/seed/arch4/1920/1080', 'The Horizon Line', 'Low-profile residential design in the desert.')">
+                <img src="https://picsum.photos/seed/arch4/1200/600" alt="Work 4" referrerPolicy="no-referrer">
+                <div class="item-info">04 / Horizon</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYER 1: DIGITAL ARCH GRID -->
+    <div id="view-digital" class="detail-view palette-beige">
+        <header class="detail-header">
+            <div class="header-group">
+                <span class="micro-label">Experiment_Layer</span>
+                <h3>Digital Architecture</h3>
+            </div>
+            <button class="back-btn" onclick="closeDetail('digital')">Return_Layer_0</button>
+        </header>
+        <div class="grid-container">
+            <div class="grid-item vertical" onclick="openProject('https://picsum.photos/seed/dig1/1080/1920', 'Procedural Ruins', 'Computational decay in virtual spaces.')">
+                <img src="https://picsum.photos/seed/dig1/800/1200" alt="Digital 1" referrerPolicy="no-referrer">
+                <div class="item-info">01 / Entropy</div>
+            </div>
+            <div class="grid-item large" onclick="openProject('https://picsum.photos/seed/dig2/1920/1080', 'Meta-Void', 'Concept for a decentralized gallery.')">
+                <img src="https://picsum.photos/seed/dig2/1200/800" alt="Digital 2" referrerPolicy="no-referrer">
+                <div class="item-info">02 / Meta-Void</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYER 1: OTHER WORKS GRID -->
+    <div id="view-other" class="detail-view palette-sage">
+        <header class="detail-header">
+            <div class="header-group">
+                <span class="micro-label">Lateral_Studies</span>
+                <h3>Other Works</h3>
+            </div>
+            <button class="back-btn" onclick="closeDetail('other')">Return_Layer_0</button>
+        </header>
+        <div class="grid-container">
+            <div class="grid-item horizontal" onclick="openProject('https://picsum.photos/seed/other1/1920/1080', 'Furniture Series 01', 'Aluminum studies in cantilever.')">
+                <img src="https://picsum.photos/seed/other1/1200/600" alt="Other 1" referrerPolicy="no-referrer">
+                <div class="item-info">01 / Furniture</div>
+            </div>
+            <div class="grid-item small" onclick="openProject('https://picsum.photos/seed/other2/800/800', 'Material Research', 'Oxidized metal texture library.')">
+                <img src="https://picsum.photos/seed/other2/800/800" alt="Other 2" referrerPolicy="no-referrer">
+                <div class="item-info">02 / Materials</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYER 1: CONTACT -->
+    <div id="view-contact" class="detail-view">
+        <header class="detail-header">
+            <div class="header-group">
+                <span class="micro-label">Comms_Interface</span>
+                <h3>Get in Touch</h3>
+            </div>
+            <button class="back-btn" onclick="closeDetail('contact')">Return_Layer_0</button>
+        </header>
+        <div class="bio-content">
+            <form class="contact-form" onsubmit="event.preventDefault(); alert('Message sent.');">
+                <input type="text" placeholder="Your Name" required>
+                <input type="email" placeholder="Email Address" required>
+                <textarea rows="4" placeholder="Brief Inquiry"></textarea>
+                <button class="explore-btn" type="submit">Send Message</button>
+            </form>
+            <div style="margin-top: 4rem; opacity: 0.4; font-size: 0.8rem; letter-spacing: 1px;">
+                STUDIO@ARCH-OS.COM<br>
+                BERLIN — TOKYO — PARIS
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYER 2: PROJECT DETAIL -->
+    <div id="project-detail">
+        <button class="close-project" onclick="closeProject()">Close_View</button>
+        <div class="project-image-side">
+            <img id="project-img" src="" alt="Project Image" referrerPolicy="no-referrer">
+        </div>
+        <div class="project-info-side">
+            <span class="micro-label" style="margin-bottom: 1rem;">Project_Insight</span>
+            <h2 id="project-title" style="font-weight: 300; margin-bottom: 2rem; font-size: 3.5rem; line-height: 0.9; letter-spacing: -0.05em; text-transform: uppercase;"></h2>
+            <p id="project-desc" style="font-weight: 300; opacity: 0.8; line-height: 1.6;"></p>
+            <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--ink);" class="mono micro-label">
+                Data_Verified // Status: Finalized
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // NAVIGATION LOGIC
+        const desktop = document.getElementById('os-desktop');
+        const tabs = document.querySelectorAll('.nav-tab');
+
+        function scrollToPanel(index) {
+            desktop.scrollTo({
+                left: index * window.innerWidth,
+                behavior: 'smooth'
+            });
+        }
+
+        desktop.addEventListener('scroll', () => {
+            const index = Math.round(desktop.scrollLeft / window.innerWidth);
+            tabs.forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+            });
+        });
+
+        function openDetail(id) {
+            document.getElementById(`view-${id}`).classList.add('active');
+        }
+
+        function closeDetail(id) {
+            document.getElementById(`view-${id}`).classList.remove('active');
+        }
+
+        function openProject(imgUrl, title, desc) {
+            const projectView = document.getElementById('project-detail');
+            document.getElementById('project-img').src = imgUrl;
+            document.getElementById('project-title').textContent = title;
+            document.getElementById('project-desc').textContent = desc;
+            projectView.classList.add('active');
+        }
+
+        function closeProject() {
+            document.getElementById('project-detail').classList.remove('active');
+        }
+
+        // Horizontal Drag to Scroll Support
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        desktop.addEventListener('mousedown', (e) => {
+            isDown = true;
+            desktop.style.cursor = 'grabbing';
+            startX = e.pageX - desktop.offsetLeft;
+            scrollLeft = desktop.scrollLeft;
+        });
+
+        desktop.addEventListener('mouseleave', () => {
+            isDown = false;
+            desktop.style.cursor = 'grab';
+        });
+
+        desktop.addEventListener('mouseup', () => {
+            isDown = false;
+            desktop.style.cursor = 'grab';
+        });
+
+        desktop.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - desktop.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            desktop.scrollLeft = scrollLeft - walk;
+        });
+    </script>
+</body>
+</html>
+
